@@ -1,0 +1,30 @@
+export LR=5e-4 
+export CUDA_VISIBLE_DEVICES=0,1
+export NGPU=2
+python -m torch.distributed.launch --master_port=29566 --nproc_per_node=2 train.py \
+  --closed_book \
+  --shuffle \
+  --per_gpu_batch_size=64 \
+  --total_steps=12000 \
+  --eval_freq=1000 \
+  --save_freq=1000 \
+  --name= \
+  --checkpoint_dir=ckpt/xp_exp \
+  --use_gradient_checkpoint_reader \
+  --precision=fp32 \
+  --shard_optim \
+  --shard_grads \
+  --target_maxlength=32 \
+  --generation_max_length=32 \
+  --reader_model_type=google/t5-xl-lm-adapt \
+  --dropout=0.1 \
+  --weight_decay=0.01 \
+  --lr=${LR} \
+  --scheduler=linear \
+  --text_maxlength=560 \
+  --retriever_from=persona \
+  --train_data="data/convai2/train.jsonl" \
+  --eval_data="data/convai2/valid.jsonl" \
+  --log_freq=1 \
+  --warmup_steps=5 \
+  --write_results
