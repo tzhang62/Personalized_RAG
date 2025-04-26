@@ -1,10 +1,10 @@
 
 
 import torch
-from torch.optim import AdamW
+from torch.optim import adamw as _adamw
 
-# AdamW = _adamw.AdamW
-# adamw = _adamw.F.adamw
+AdamW = _adamw.AdamW
+adamw = _adamw.F.adamw
 
 
 class AdamWFP32Copy(AdamW):
@@ -153,7 +153,7 @@ class AdamWFP32Copy(AdamW):
             if "foreach" in group:
                 adam_params["foreach"] = group["foreach"]
 
-            AdamW(**adam_params)
+            adamw(**adam_params)
 
             for p in group["params"]:
                 if p.grad is None:

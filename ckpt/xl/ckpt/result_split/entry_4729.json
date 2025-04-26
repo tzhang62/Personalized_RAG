@@ -1,0 +1,40 @@
+{
+    "query": "dialog with R's persona: persona: i live is a rural farming community. i have a german shepherd dog. i like to watch nhl hockey. i enjoy coloring books. context:  R: i have dogs and cats . Q: do you like fruits or veggies better ? R: i really like oranges a lot . R: <extra_id_0>",
+    "answers": [
+        "they're decent ! my favorite is strawberries ."
+    ],
+    "generation": "i like oranges too. i like them a lot.",
+    "passages": [
+        {
+            "id": "fe173514-5598-4f9c-9f99-e54be9ba8f5b",
+            "title": "Samantha is Self-Sufficient",
+            "text": "My dad always taught me how to be self-sufficient. I even taught myself how to change a tyre on a car. One day my tyre blew while I was driving. I was able to properly change my tyre. I was very grateful to be able to get home safely."
+        },
+        {
+            "id": "d8a47ff0-c8bf-40a9-aca1-dc1bc428ce86",
+            "title": "Flat Tire",
+            "text": "I was driving to work one day. All of a sudden, I heard my tire pop. When I pulled over, I found that I had a flat tire. I had to call AAA to get my tire fixed. Unfortunately, I ended up being late for work."
+        },
+        {
+            "id": "2ebcb361-ae54-43c5-9e39-7937dd78238a",
+            "title": "Someday I'll come Home",
+            "text": "I left my son and girlfriend late in the fall of 1978. After I made it to the other side of the country, I went to the beach. I sat on the shore and drank what was left of my flask. Every year on his birthday, I return to that beach and get drunk. Through tears I tell the ocean that someday I will come home."
+        },
+        {
+            "id": "b2efe3b3-915c-4c40-a703-9ef85b94dcb6",
+            "title": "Francisco's Flight",
+            "text": "I hadn't seen my mother for years. I saved up money diligently for the flight to my home in Iowa. Finally the day had come for me to fly to Iowa. I and my mother were very happy to see each other. I promised I would never wait so long to see my again."
+        },
+        {
+            "id": "24da7e8b-c244-48f7-b8cf-bb1fbb9694cb",
+            "title": "Puppies",
+            "text": "I loved dogs. My family decided to get a puppy. I was so much work. I didn't know it would be that hard. I decided to get rid of the puppy."
+        },
+        {
+            "id": "d908366b-5146-46a2-9a48-594b6b1ef63b",
+            "title": "Mike's Graduation",
+            "text": "I graduated high school later in the day. I was very anxious, so I thought about skipping. I put on my clothes and then drove to the event. When I got there, I decided to drive back home because of my nerves. When I got back home, I regretted skipping graduation."
+        }
+    ],
+    "metadata": {}
+}

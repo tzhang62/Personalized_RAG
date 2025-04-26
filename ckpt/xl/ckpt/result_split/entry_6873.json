@@ -1,0 +1,40 @@
+{
+    "query": "dialog with R's persona: persona: i don't have many friends. i hate school. i am a 12 year old girl. i have blue eyes and red hair that comes to my waist. context:  Q: hi there , my name is charlie , how are you doing today ? R: <extra_id_0>",
+    "answers": [
+        "hi , i'm only 12 years old , so please no foul language !"
+    ],
+    "generation": "i'm good. i'm sam. what are you doing?",
+    "passages": [
+        {
+            "id": "fe173514-5598-4f9c-9f99-e54be9ba8f5b",
+            "title": "Samantha is Self-Sufficient",
+            "text": "My dad always taught me how to be self-sufficient. I even taught myself how to change a tyre on a car. One day my tyre blew while I was driving. I was able to properly change my tyre. I was very grateful to be able to get home safely."
+        },
+        {
+            "id": "be8c70f4-fdbf-43b8-870e-90f27a4cdc3c",
+            "title": "Bill Goes to Graduate School",
+            "text": "I decide that I want to pursue a master's degree after college. While my friends are all looking for jobs, I am applying for a school. At first I worried that I was making the wrong decision. However, when I get to graduate school, I feel great. I am proud that I will soon have a master's degree."
+        },
+        {
+            "id": "49ccff26-6eff-4a99-af0d-f184fff9265b",
+            "title": "Gas Bill",
+            "text": "My mom told me that the family had a very high gas bill. They could not afford bills that high, so changes would be made. I was told that the heat was going to be lowered. From now on I would have to wear warm clothes around the house. I was unhappy, but I understood."
+        },
+        {
+            "id": "45b09097-c288-4fa6-b04c-50519f1b8f24",
+            "title": "Mike goes to university",
+            "text": "I realized that I needed to have a reliable skill. I decided to go to college to learn a skill for employment. I drove to the local university and asked for help. I became enrolled and began to study to be an engineer. Unfortunately, I did not enjoy school and decided to drop out."
+        },
+        {
+            "id": "455727b8-d0ac-41ac-a537-2aa1e4fc54a2",
+            "title": "Change Clothes",
+            "text": "I was at my grandma's house. They had just gotten back from my grandpa's funeral. Everyone was anxious to change into comfortable clothes. I was the last one in the house. I had to wait for a room to open so I could change."
+        },
+        {
+            "id": "5fc339b1-f0c2-4bfe-9e7e-86b2a96e168b",
+            "title": "In Training",
+            "text": "I was mad at my puppy. It ruined my couch. And it damaged my coffee table. But I realized it was my fault. I didn't train it properly."
+        }
+    ],
+    "metadata": {}
+}

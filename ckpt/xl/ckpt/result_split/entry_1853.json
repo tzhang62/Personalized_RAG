@@ -1,0 +1,40 @@
+{
+    "query": "dialog with R's persona: persona: i am expecting twins in two months. a already have a children. i just bought my first home. i work at a bank. context:  Q: hello how are you today ? R: <extra_id_0>",
+    "answers": [
+        "hi . okay . heartburn . 2 months until i am due . the twins are restless tonight ."
+    ],
+    "generation": "i am good. how are you?",
+    "passages": [
+        {
+            "id": "9a51198e-96f1-42c3-b09d-a3e1e067d803",
+            "title": "Overweight Kid",
+            "text": "My parents were overweight. I was overweight as well. The doctors told my parents it was unhealthy. My parents understood and decided to make a change. They got themselves and I on a diet."
+        },
+        {
+            "id": "5d5e7aeb-332f-4c8b-a3c3-44585501e493",
+            "title": "Foolish Frank",
+            "text": "I had been drinking beer. I got a call from my girlfriend, asking where I was. I suddenly realized I had a date that night. Since I was already a bit drunk, I could not drive. I spent the rest of the night drinking more beers."
+        },
+        {
+            "id": "3e53cf10-5e80-41d2-b7bb-fc910480a1be",
+            "title": "Broken ankle",
+            "text": "I was walking to school. Since I wasn't looking at my feet, I stepped on a rock. I landed on the ground in pain. Thankfully, a stranger rushed to pick me up. He took me to the hospital to seek treatment."
+        },
+        {
+            "id": "fe173514-5598-4f9c-9f99-e54be9ba8f5b",
+            "title": "Samantha is Self-Sufficient",
+            "text": "My dad always taught me how to be self-sufficient. I even taught myself how to change a tyre on a car. One day my tyre blew while I was driving. I was able to properly change my tyre. I was very grateful to be able to get home safely."
+        },
+        {
+            "id": "ada527e3-0d1b-4f81-9495-fadab18470c7",
+            "title": "Ice Cream",
+            "text": "I had a craving for mint ice cream. I went to a local ice cream parlor, but they didn't have mint. I went to a grocery store, but they didn't have mint either. I ended up buying some ice, some cream, and some mint. I went home and made delicious ice cream herself."
+        },
+        {
+            "id": "ea6529ff-0a71-45f6-b846-21c943ac56eb",
+            "title": "Abel's work",
+            "text": "I worked hard mowing lawns for extra money. I currently had 5 lawns I was responsible for. One day one of my customers was unhappy with the work I did. I apologized and promised to do a better job next time. The customer did not want Able to continue to work on my lawn."
+        }
+    ],
+    "metadata": {}
+}

@@ -1,0 +1,40 @@
+{
+    "query": "dialog with R's persona: persona: spiderman is my favorite. if i am not cooking in the kitchen then i am definitely on the water. i love cooking but i also enjoy fishing. hey my name is larry and i am a chef. context:  Q: hello ! how are you today ? R: <extra_id_0>",
+    "answers": [
+        "how are you ? i am larry and i love to cook !"
+    ],
+    "generation": "i am doing great. just cooking dinner. how are you?",
+    "passages": [
+        {
+            "id": "fe173514-5598-4f9c-9f99-e54be9ba8f5b",
+            "title": "Samantha is Self-Sufficient",
+            "text": "My dad always taught me how to be self-sufficient. I even taught myself how to change a tyre on a car. One day my tyre blew while I was driving. I was able to properly change my tyre. I was very grateful to be able to get home safely."
+        },
+        {
+            "id": "ea6529ff-0a71-45f6-b846-21c943ac56eb",
+            "title": "Abel's work",
+            "text": "I worked hard mowing lawns for extra money. I currently had 5 lawns I was responsible for. One day one of my customers was unhappy with the work I did. I apologized and promised to do a better job next time. The customer did not want Able to continue to work on my lawn."
+        },
+        {
+            "id": "0a688c1c-38cc-422c-a3a0-d34965504f33",
+            "title": "Drunk Driving",
+            "text": "I got drunk at the Christmas party. I decided to drive home under the influence of alcohol. Sure enough, I was stopped by the police. The police arrested me and sent me to jail. I had to pay a fine and realize I should not drink and drive."
+        },
+        {
+            "id": "d8a47ff0-c8bf-40a9-aca1-dc1bc428ce86",
+            "title": "Flat Tire",
+            "text": "I was driving to work one day. All of a sudden, I heard my tire pop. When I pulled over, I found that I had a flat tire. I had to call AAA to get my tire fixed. Unfortunately, I ended up being late for work."
+        },
+        {
+            "id": "2ebcb361-ae54-43c5-9e39-7937dd78238a",
+            "title": "Someday I'll come Home",
+            "text": "I left my son and girlfriend late in the fall of 1978. After I made it to the other side of the country, I went to the beach. I sat on the shore and drank what was left of my flask. Every year on his birthday, I return to that beach and get drunk. Through tears I tell the ocean that someday I will come home."
+        },
+        {
+            "id": "51bef1ed-b48d-4fe7-9bb1-fb0a7b48cc40",
+            "title": "Billy worked from home.",
+            "text": "I needed to make some money. I decided on Friday night I would work from home. Turning my computer on I realized there was a lot of work up! It didn't take me long to get into the swing of things. Before I knew it, I was working my butt off and making money."
+        }
+    ],
+    "metadata": {}
+}

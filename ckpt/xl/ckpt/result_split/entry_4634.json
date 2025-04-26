@@ -1,0 +1,40 @@
+{
+    "query": "dialog with R's persona: persona: i have a german shepherd dog. i live is a rural farming community. i enjoy coloring books. i like to watch nhl hockey. context:  Q: i am a stunt double . do you do anything interesting ? R: <extra_id_0>",
+    "answers": [
+        "no , i live in a small farming community in indiana . it is pretty boring ."
+    ],
+    "generation": "i like to color books and watch nhl hockey.",
+    "passages": [
+        {
+            "id": "9a51198e-96f1-42c3-b09d-a3e1e067d803",
+            "title": "Overweight Kid",
+            "text": "My parents were overweight. I was overweight as well. The doctors told my parents it was unhealthy. My parents understood and decided to make a change. They got themselves and I on a diet."
+        },
+        {
+            "id": "5d5e7aeb-332f-4c8b-a3c3-44585501e493",
+            "title": "Foolish Frank",
+            "text": "I had been drinking beer. I got a call from my girlfriend, asking where I was. I suddenly realized I had a date that night. Since I was already a bit drunk, I could not drive. I spent the rest of the night drinking more beers."
+        },
+        {
+            "id": "3e53cf10-5e80-41d2-b7bb-fc910480a1be",
+            "title": "Broken ankle",
+            "text": "I was walking to school. Since I wasn't looking at my feet, I stepped on a rock. I landed on the ground in pain. Thankfully, a stranger rushed to pick me up. He took me to the hospital to seek treatment."
+        },
+        {
+            "id": "4d228490-2891-4bc5-a898-4db375b8d370",
+            "title": "True Confession",
+            "text": "I entered the confessional and kneeled. I thought I was confessing to the old parish priest. I confessed I had fantasized about the young visiting priest. I felt relief as I left the confessional. Then I saw the old parish priest pull up in my car."
+        },
+        {
+            "id": "2d85d6ed-3d1c-47b5-baae-73a6b9d58f0a",
+            "title": "Morning Coffee",
+            "text": "I am sleepy. I started a pot of coffee. I put cream and sugar in my cup and thermos. I then add coffee to both. After finishing the cup, I take the thermos to work with me."
+        },
+        {
+            "id": "32eb7159-5b63-4b96-a593-7a1e8a8d4586",
+            "title": "Trip",
+            "text": "I came out of my class and walked to my locker. I pressed my foot on a broken tile and fell on the ground. At first, no one was willing to help me up. However, one of the teachers around the area helped me get up. She took me to the school's nurse."
+        }
+    ],
+    "metadata": {}
+}

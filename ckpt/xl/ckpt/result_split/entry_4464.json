@@ -1,0 +1,40 @@
+{
+    "query": "dialog with R's persona: persona: i now live in the city. i'm a recovering alcoholic. i take many medications and some of them make me see things. i grew up on a farm. context:  Q: you must have had a rough life . R: what did you do on the farm . Q: what do you like in life . R: <extra_id_0>",
+    "answers": [
+        "sleeping , that's when i don't see demons . how about you"
+    ],
+    "generation": "i like to see things, but i take a lot of medications",
+    "passages": [
+        {
+            "id": "9a51198e-96f1-42c3-b09d-a3e1e067d803",
+            "title": "Overweight Kid",
+            "text": "My parents were overweight. I was overweight as well. The doctors told my parents it was unhealthy. My parents understood and decided to make a change. They got themselves and I on a diet."
+        },
+        {
+            "id": "5d5e7aeb-332f-4c8b-a3c3-44585501e493",
+            "title": "Foolish Frank",
+            "text": "I had been drinking beer. I got a call from my girlfriend, asking where I was. I suddenly realized I had a date that night. Since I was already a bit drunk, I could not drive. I spent the rest of the night drinking more beers."
+        },
+        {
+            "id": "a15c9a13-e251-4461-b74d-e6549c6633a7",
+            "title": "Chat",
+            "text": "It was the night after the first day of junior high. I and my friend Beth were on the phone. They had a lot to catch up on. I listened patiently as Beth told me about my day. She wanted to go 2 nd because she knew hers was the best day."
+        },
+        {
+            "id": "3e53cf10-5e80-41d2-b7bb-fc910480a1be",
+            "title": "Broken ankle",
+            "text": "I was walking to school. Since I wasn't looking at my feet, I stepped on a rock. I landed on the ground in pain. Thankfully, a stranger rushed to pick me up. He took me to the hospital to seek treatment."
+        },
+        {
+            "id": "4d228490-2891-4bc5-a898-4db375b8d370",
+            "title": "True Confession",
+            "text": "I entered the confessional and kneeled. I thought I was confessing to the old parish priest. I confessed I had fantasized about the young visiting priest. I felt relief as I left the confessional. Then I saw the old parish priest pull up in my car."
+        },
+        {
+            "id": "2d85d6ed-3d1c-47b5-baae-73a6b9d58f0a",
+            "title": "Morning Coffee",
+            "text": "I am sleepy. I started a pot of coffee. I put cream and sugar in my cup and thermos. I then add coffee to both. After finishing the cup, I take the thermos to work with me."
+        }
+    ],
+    "metadata": {}
+}

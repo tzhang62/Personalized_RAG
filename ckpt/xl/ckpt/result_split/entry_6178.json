@@ -1,0 +1,40 @@
+{
+    "query": "dialog with R's persona: persona: i love cats and have two cats. i've a weakness for vanilla ice cream. my favorite season is winter. i have a hat collection of over 1000 hats. context:  R: my daughter is super smart and she likes it . Q: i collect medical stories from my old medicine practice . R: what else do you like ? R: <extra_id_0>",
+    "answers": [
+        "i like ice skating but i'm not very good"
+    ],
+    "generation": "i like playing in the snow. i like winter.",
+    "passages": [
+        {
+            "id": "9a51198e-96f1-42c3-b09d-a3e1e067d803",
+            "title": "Overweight Kid",
+            "text": "My parents were overweight. I was overweight as well. The doctors told my parents it was unhealthy. My parents understood and decided to make a change. They got themselves and I on a diet."
+        },
+        {
+            "id": "fe173514-5598-4f9c-9f99-e54be9ba8f5b",
+            "title": "Samantha is Self-Sufficient",
+            "text": "My dad always taught me how to be self-sufficient. I even taught myself how to change a tyre on a car. One day my tyre blew while I was driving. I was able to properly change my tyre. I was very grateful to be able to get home safely."
+        },
+        {
+            "id": "ea6529ff-0a71-45f6-b846-21c943ac56eb",
+            "title": "Abel's work",
+            "text": "I worked hard mowing lawns for extra money. I currently had 5 lawns I was responsible for. One day one of my customers was unhappy with the work I did. I apologized and promised to do a better job next time. The customer did not want Able to continue to work on my lawn."
+        },
+        {
+            "id": "0a688c1c-38cc-422c-a3a0-d34965504f33",
+            "title": "Drunk Driving",
+            "text": "I got drunk at the Christmas party. I decided to drive home under the influence of alcohol. Sure enough, I was stopped by the police. The police arrested me and sent me to jail. I had to pay a fine and realize I should not drink and drive."
+        },
+        {
+            "id": "d8a47ff0-c8bf-40a9-aca1-dc1bc428ce86",
+            "title": "Flat Tire",
+            "text": "I was driving to work one day. All of a sudden, I heard my tire pop. When I pulled over, I found that I had a flat tire. I had to call AAA to get my tire fixed. Unfortunately, I ended up being late for work."
+        },
+        {
+            "id": "2e494da2-ae5f-46e7-8de1-062a1f1e356e",
+            "title": "The Bill",
+            "text": "My car broke down shortly after leaving the driveway. I decided to push it back home and repair it himself. I found himself in over my head and called a tow truck for repair. The tow truck took the car to a garage where it was repaired. I then realized attempting repairs yourself can be expensive."
+        }
+    ],
+    "metadata": {}
+}

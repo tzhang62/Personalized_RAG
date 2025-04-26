@@ -7,7 +7,6 @@ import socket
 import subprocess
 import sys
 from logging import getLogger
-import psutil
 
 import torch
 
@@ -41,15 +40,6 @@ def init_signal_handler():
     signal.signal(signal.SIGUSR1, sig_handler)
     signal.signal(signal.SIGTERM, term_handler)
     # logger.warning("Signal handler installed.")
-
-# Retrieve all network interfaces and their IP addresses
-def get_default_interface():
-    gateways = psutil.net_if_addrs()
-    for interface, addrs in gateways.items():
-        for addr in addrs:
-            if addr.family == socket.AF_INET:  # Use socket.AF_INET for IPv4 addresses
-                return interface
-    return None
 
 
 def init_distributed_mode(params):
@@ -172,27 +162,16 @@ def init_distributed_mode(params):
 
         # print("Initializing PyTorch distributed ...")
         # Fix for if gloo sockets are inconsistent
-        #p1 = subprocess.Popen(["ip", "r"], stdout=subprocess.PIPE)
-        #p1 = subprocess.Popen(["netstate", "-rn"], stdout=subprocess.PIPE)
-        # p2 = subprocess.Popen(["grep", "default"], stdin=p1.stdout, stdout=subprocess.PIPE)
-        # p1.stdout.close()
-        #gloo_socket_ifname = subprocess.check_output(["awk", "{print $5}"], stdin=p2.stdout).decode("utf-8").strip()
-        # p2.stdout.close()
-        gloo_socket_ifname = get_default_interface()
+        p1 = subprocess.Popen(["ip", "r"], stdout=subprocess.PIPE)
+        p2 = subprocess.Popen(["grep", "default"], stdin=p1.stdout, stdout=subprocess.PIPE)
+        p1.stdout.close()
+        gloo_socket_ifname = subprocess.check_output(["awk", "{print $5}"], stdin=p2.stdout).decode("utf-8").strip()
+        p2.stdout.close()
+        os.environ["GLOO_SOCKET_IFNAME"] = gloo_socket_ifname
 
-        if gloo_socket_ifname:
-            os.environ["GLOO_SOCKET_IFNAME"] = gloo_socket_ifname
-            print("GLOO_SOCKET_IFNAME set to:", gloo_socket_ifname)
-        else:
-            print("No default network interface found.")
-            #os.environ["GLOO_SOCKET_IFNAME"] = gloo_socket_ifname
-        init_method = f"tcp://{os.environ['MASTER_ADDR']}:{os.environ['MASTER_PORT']}"
-        init_method = "tcp://localhost:12355"
         torch.distributed.init_process_group(
-            init_method=init_method,
+            init_method="env://",
             backend="nccl",
-            world_size=1, 
-            rank=0
         )
 
         global GLOO_GROUP

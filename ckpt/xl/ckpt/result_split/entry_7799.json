@@ -1,0 +1,40 @@
+{
+    "query": "dialog with R's persona: persona: i am a musician and hope to make it big some day. i play the piano and guitar and sing. i also work as a custodian to help pay the bills. my favorite type of music to sing is folk music. context:  R: what do you do for a living . Q: that sounds really cool . R: is that the person you look up to . R: <extra_id_0>",
+    "answers": [
+        "one of them , i play instruments like him and folk songs too ."
+    ],
+    "generation": "yes, i look up to them.",
+    "passages": [
+        {
+            "id": "30bc87a6-d7fe-47dc-baf0-8a33e99b009e",
+            "title": "Going Home",
+            "text": "I am far from home. I miss my family. One day I realized I did not have to live far away. I moved home. My family was happy to have my back."
+        },
+        {
+            "id": "c228ea78-8431-46d3-862a-2f950f4a6df7",
+            "title": "New Paint",
+            "text": "Today I decided to paint my laundry room. It was very hard to move both appliances. I had to call my friend to help me move the washer. He helped me clear the room and helped me paint. I was glad I called my friend for help."
+        },
+        {
+            "id": "fb976ec3-0161-4859-a51b-e8bf5a88521c",
+            "title": "New House",
+            "text": "My family was house hunting for a new place to live. I didn't want to move to a new house. I would have to leave behind my best friends. My father explained I would make new friends. My father was right in time I made new friends."
+        },
+        {
+            "id": "0871aa06-c950-44a7-ad58-173a1d6f6e5f",
+            "title": "Get A Life",
+            "text": "I loved my mother. But one evening I broke my mother's heart. My mother called out for me like I always did. But I was in a bad mood and snapped at my mother. I broke my mother's heart when I told her to get a life."
+        },
+        {
+            "id": "1c059080-7d9f-4191-a0f9-1ec9524492d4",
+            "title": "Finally voting",
+            "text": "I was happy to be eighteen. I was able to vote now. I picked my favorite candidate. When the election was done I won. I couldn't have been happier."
+        },
+        {
+            "id": "05b5377d-512b-4ed5-9380-e76fdb36e8ab",
+            "title": "Rescue",
+            "text": "One day I decided to visit my friend. When I got there I saw that the house was on fire. I tried to get inside but the door was locked. I then kicked it down inside. I found my friend on the floor. I was able to get me out and I saved my friend's life."
+        }
+    ],
+    "metadata": {}
+}

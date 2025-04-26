@@ -1,0 +1,40 @@
+{
+    "query": "dialog with R's persona: persona: now i live in the united states. my aunt helped me escape when i was of. i was born in somalia. i was forced to marry when i was a. i like to dance. context:  Q: in all my sixty years i never did see a library in somalia . how tragic . R: is it true the age expectancy is 13 ? Q: i feel like this newfangled internet will force me to retire in a few years . R: <extra_id_0>",
+    "answers": [
+        "so funny ! i only found it a few years ago and it opened my world ."
+    ],
+    "generation": "i do not know what i want to do yet.",
+    "passages": [
+        {
+            "id": "1c682811-0380-4016-aca1-91918e8100bd",
+            "title": "Tyler goes to war",
+            "text": "I am a young man. I want to serve my country. I joins the army. While in the army I go to war. I lose my life in a war."
+        },
+        {
+            "id": "6b63d068-8f6f-4204-81c6-ec6df26e9394",
+            "title": "Tune Up",
+            "text": "I and Liz were going to drive my car to Las Vegas. But I wanted to make sure the car would make it. My brother thought I should get a tune up. I took it to the local car place to have it done. I was very happy my brother had made the suggestion."
+        },
+        {
+            "id": "c228ea78-8431-46d3-862a-2f950f4a6df7",
+            "title": "New Paint",
+            "text": "Today I decided to paint my laundry room. It was very hard to move both appliances. I had to call my friend to help me move the washer. He helped me clear the room and helped me paint. I was glad I called my friend for help."
+        },
+        {
+            "id": "5d5e7aeb-332f-4c8b-a3c3-44585501e493",
+            "title": "Foolish Frank",
+            "text": "I had been drinking beer. I got a call from my girlfriend, asking where I was. I suddenly realized I had a date that night. Since I was already a bit drunk, I could not drive. I spent the rest of the night drinking more beers."
+        },
+        {
+            "id": "a15c9a13-e251-4461-b74d-e6549c6633a7",
+            "title": "Chat",
+            "text": "It was the night after the first day of junior high. I and my friend Beth were on the phone. They had a lot to catch up on. I listened patiently as Beth told me about my day. She wanted to go 2 nd because she knew hers was the best day."
+        },
+        {
+            "id": "9a51198e-96f1-42c3-b09d-a3e1e067d803",
+            "title": "Overweight Kid",
+            "text": "My parents were overweight. I was overweight as well. The doctors told my parents it was unhealthy. My parents understood and decided to make a change. They got themselves and I on a diet."
+        }
+    ],
+    "metadata": {}
+}

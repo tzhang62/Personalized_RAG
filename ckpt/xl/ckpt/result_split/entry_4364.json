@@ -1,0 +1,40 @@
+{
+    "query": "dialog with R's persona: persona: i am 19 and i cannot wait to move out 19 my parents home. they are constantly on my back. i work took i have a part time job at burger king. i just want to have fun with my friends. i do not drink or do drugs or anything. context:  R: that is nice ! i plan to take over the world ! Q: well i'm 56 , so i don't live at home anymore . R: i'm sorry to hear that . maybe they just want your help around the house ? R: <extra_id_0>",
+    "answers": [
+        "maybe i will help more . i do not do anything wrong . . . no drugs . . . nothing"
+    ],
+    "generation": "i'm only 19, so i'm not sure. i'm trying to move out.",
+    "passages": [
+        {
+            "id": "fe173514-5598-4f9c-9f99-e54be9ba8f5b",
+            "title": "Samantha is Self-Sufficient",
+            "text": "My dad always taught me how to be self-sufficient. I even taught myself how to change a tyre on a car. One day my tyre blew while I was driving. I was able to properly change my tyre. I was very grateful to be able to get home safely."
+        },
+        {
+            "id": "efed3005-c47a-4ea9-b2b0-e1f3dec82a74",
+            "title": "Popped inner tube",
+            "text": "I was riding my bike to my friends' house. Suddenly, I felt a pop and my bike stopped working. I took the bike home and checked out the problem. I went to the store and bought the tube to fix the tyre. I went home and fixed my bike and went for a ride."
+        },
+        {
+            "id": "f709bcda-dfba-4225-81fe-4d0bdf25f6fb",
+            "title": "Ronald Goes Bowling",
+            "text": "I want to think of something to do with my friends. I decided that I would like to go bowling with them. They go to the local bowling alley in the afternoon. I bowl very well. I am happy that I found something to do with my friends."
+        },
+        {
+            "id": "be8c70f4-fdbf-43b8-870e-90f27a4cdc3c",
+            "title": "Bill Goes to Graduate School",
+            "text": "I decide that I want to pursue a master's degree after college. While my friends are all looking for jobs, I am applying for a school. At first I worried that I was making the wrong decision. However, when I get to graduate school, I feel great. I am proud that I will soon have a master's degree."
+        },
+        {
+            "id": "49ccff26-6eff-4a99-af0d-f184fff9265b",
+            "title": "Gas Bill",
+            "text": "My mom told me that the family had a very high gas bill. They could not afford bills that high, so changes would be made. I was told that the heat was going to be lowered. From now on I would have to wear warm clothes around the house. I was unhappy, but I understood."
+        },
+        {
+            "id": "61393d34-cee9-4292-a3d2-960596db4424",
+            "title": "Kay",
+            "text": "I turned 21 and I was very excited. I wanted to have a huge party with beer and music and lots of action! But my girlfriend smelled trouble and begged me to stay in. I reluctantly agreed to a quiet dinner and movie celebration. And I ended up enjoying my 21st birthday more than I'd expected!"
+        }
+    ],
+    "metadata": {}
+}

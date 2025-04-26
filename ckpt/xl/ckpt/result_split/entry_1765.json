@@ -1,0 +1,40 @@
+{
+    "query": "dialog with R's persona: persona: i volunteer my time with a local bunny rescue. i work fulltime in a shipyard. my favorite color is navy blue. i donate a part of my salary to charity each month. context:  R: do ou own a bunny . Q: it was nice meeting you and the bunnies . R: that would be great to have a bunny . R: <extra_id_0>",
+    "answers": [
+        "yes . i will love and pet and hug them ."
+    ],
+    "generation": "i know, right? i work a lot, but i donate a lot of money to charity each month ",
+    "passages": [
+        {
+            "id": "fe173514-5598-4f9c-9f99-e54be9ba8f5b",
+            "title": "Samantha is Self-Sufficient",
+            "text": "My dad always taught me how to be self-sufficient. I even taught myself how to change a tyre on a car. One day my tyre blew while I was driving. I was able to properly change my tyre. I was very grateful to be able to get home safely."
+        },
+        {
+            "id": "2ebcb361-ae54-43c5-9e39-7937dd78238a",
+            "title": "Someday I'll come Home",
+            "text": "I left my son and girlfriend late in the fall of 1978. After I made it to the other side of the country, I went to the beach. I sat on the shore and drank what was left of my flask. Every year on his birthday, I return to that beach and get drunk. Through tears I tell the ocean that someday I will come home."
+        },
+        {
+            "id": "efed3005-c47a-4ea9-b2b0-e1f3dec82a74",
+            "title": "Popped inner tube",
+            "text": "I was riding my bike to my friends' house. Suddenly, I felt a pop and my bike stopped working. I took the bike home and checked out the problem. I went to the store and bought the tube to fix the tyre. I went home and fixed my bike and went for a ride."
+        },
+        {
+            "id": "f709bcda-dfba-4225-81fe-4d0bdf25f6fb",
+            "title": "Ronald Goes Bowling",
+            "text": "I want to think of something to do with my friends. I decided that I would like to go bowling with them. They go to the local bowling alley in the afternoon. I bowl very well. I am happy that I found something to do with my friends."
+        },
+        {
+            "id": "be8c70f4-fdbf-43b8-870e-90f27a4cdc3c",
+            "title": "Bill Goes to Graduate School",
+            "text": "I decide that I want to pursue a master's degree after college. While my friends are all looking for jobs, I am applying for a school. At first I worried that I was making the wrong decision. However, when I get to graduate school, I feel great. I am proud that I will soon have a master's degree."
+        },
+        {
+            "id": "49ccff26-6eff-4a99-af0d-f184fff9265b",
+            "title": "Gas Bill",
+            "text": "My mom told me that the family had a very high gas bill. They could not afford bills that high, so changes would be made. I was told that the heat was going to be lowered. From now on I would have to wear warm clothes around the house. I was unhappy, but I understood."
+        }
+    ],
+    "metadata": {}
+}

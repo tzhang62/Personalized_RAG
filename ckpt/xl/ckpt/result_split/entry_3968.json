@@ -1,0 +1,40 @@
+{
+    "query": "dialog with R's persona: persona: i am very strong for my age. i'm 100 years old. i remember when nobody had a television. i love to drink wine and dance in the moonlight. context:  R: i bet it was , my hobby is horse back riding . Q: wow i'd go crazy ! R: the internet is where i got my information on becoming a vegan . R: <extra_id_0>",
+    "answers": [
+        "so , you would not know , or could tell , the difference . also , i like drinking wein !"
+    ],
+    "generation": "i am not a vegan, i am 100. that's why i am here.",
+    "passages": [
+        {
+            "id": "fe173514-5598-4f9c-9f99-e54be9ba8f5b",
+            "title": "Samantha is Self-Sufficient",
+            "text": "My dad always taught me how to be self-sufficient. I even taught myself how to change a tyre on a car. One day my tyre blew while I was driving. I was able to properly change my tyre. I was very grateful to be able to get home safely."
+        },
+        {
+            "id": "f709bcda-dfba-4225-81fe-4d0bdf25f6fb",
+            "title": "Ronald Goes Bowling",
+            "text": "I want to think of something to do with my friends. I decided that I would like to go bowling with them. They go to the local bowling alley in the afternoon. I bowl very well. I am happy that I found something to do with my friends."
+        },
+        {
+            "id": "be8c70f4-fdbf-43b8-870e-90f27a4cdc3c",
+            "title": "Bill Goes to Graduate School",
+            "text": "I decide that I want to pursue a master's degree after college. While my friends are all looking for jobs, I am applying for a school. At first I worried that I was making the wrong decision. However, when I get to graduate school, I feel great. I am proud that I will soon have a master's degree."
+        },
+        {
+            "id": "49ccff26-6eff-4a99-af0d-f184fff9265b",
+            "title": "Gas Bill",
+            "text": "My mom told me that the family had a very high gas bill. They could not afford bills that high, so changes would be made. I was told that the heat was going to be lowered. From now on I would have to wear warm clothes around the house. I was unhappy, but I understood."
+        },
+        {
+            "id": "45b09097-c288-4fa6-b04c-50519f1b8f24",
+            "title": "Mike goes to university",
+            "text": "I realized that I needed to have a reliable skill. I decided to go to college to learn a skill for employment. I drove to the local university and asked for help. I became enrolled and began to study to be an engineer. Unfortunately, I did not enjoy school and decided to drop out."
+        },
+        {
+            "id": "455727b8-d0ac-41ac-a537-2aa1e4fc54a2",
+            "title": "Change Clothes",
+            "text": "I was at my grandma's house. They had just gotten back from my grandpa's funeral. Everyone was anxious to change into comfortable clothes. I was the last one in the house. I had to wait for a room to open so I could change."
+        }
+    ],
+    "metadata": {}
+}

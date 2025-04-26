@@ -1,0 +1,40 @@
+{
+    "query": "dialog with R's persona: persona: i'm scared of dying. knitting is my passion. i've a dogs. the county wide bake sale is where i feel most at home. context:  Q: that is great , could you knit something for my wife ? R: she models clothing , so she may wear it on the runway ! Q: i think your scarfs would look wonderful ! R: <extra_id_0>",
+    "answers": [
+        "there are very unique and one of a kind i will send you pictures ."
+    ],
+    "generation": "i'm so passionate about it. i would love to make something for my dog.",
+    "passages": [
+        {
+            "id": "fe173514-5598-4f9c-9f99-e54be9ba8f5b",
+            "title": "Samantha is Self-Sufficient",
+            "text": "My dad always taught me how to be self-sufficient. I even taught myself how to change a tyre on a car. One day my tyre blew while I was driving. I was able to properly change my tyre. I was very grateful to be able to get home safely."
+        },
+        {
+            "id": "ea6529ff-0a71-45f6-b846-21c943ac56eb",
+            "title": "Abel's work",
+            "text": "I worked hard mowing lawns for extra money. I currently had 5 lawns I was responsible for. One day one of my customers was unhappy with the work I did. I apologized and promised to do a better job next time. The customer did not want Able to continue to work on my lawn."
+        },
+        {
+            "id": "d8a47ff0-c8bf-40a9-aca1-dc1bc428ce86",
+            "title": "Flat Tire",
+            "text": "I was driving to work one day. All of a sudden, I heard my tire pop. When I pulled over, I found that I had a flat tire. I had to call AAA to get my tire fixed. Unfortunately, I ended up being late for work."
+        },
+        {
+            "id": "2ebcb361-ae54-43c5-9e39-7937dd78238a",
+            "title": "Someday I'll come Home",
+            "text": "I left my son and girlfriend late in the fall of 1978. After I made it to the other side of the country, I went to the beach. I sat on the shore and drank what was left of my flask. Every year on his birthday, I return to that beach and get drunk. Through tears I tell the ocean that someday I will come home."
+        },
+        {
+            "id": "dbd55bb8-ef91-4152-946a-3e4fef37ac85",
+            "title": "The Easter Present",
+            "text": "I woke up excited because it was Easter morning. I jumped out of bed and ran downstairs. I wanted to see if the Easter Bunny had come. To my delight I saw my Easter basket full of presents and candy. I knew that this was going to be an amazing Easter."
+        },
+        {
+            "id": "b2efe3b3-915c-4c40-a703-9ef85b94dcb6",
+            "title": "Francisco's Flight",
+            "text": "I hadn't seen my mother for years. I saved up money diligently for the flight to my home in Iowa. Finally the day had come for me to fly to Iowa. I and my mother were very happy to see each other. I promised I would never wait so long to see my again."
+        }
+    ],
+    "metadata": {}
+}

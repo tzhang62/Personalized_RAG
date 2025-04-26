@@ -1,0 +1,40 @@
+{
+    "query": "dialog with R's persona: persona: i love to go to disney world every year. mickey mouse is my favorite character. i play with my friends on the playground. i'm in the third grade. context:  Q: hello , how are you doing today ? R: <extra_id_0>",
+    "answers": [
+        "okay . i go to school . i like disney world ."
+    ],
+    "generation": "i am doing well, how are you?",
+    "passages": [
+        {
+            "id": "c228ea78-8431-46d3-862a-2f950f4a6df7",
+            "title": "New Paint",
+            "text": "Today I decided to paint my laundry room. It was very hard to move both appliances. I had to call my friend to help me move the washer. He helped me clear the room and helped me paint. I was glad I called my friend for help."
+        },
+        {
+            "id": "fb976ec3-0161-4859-a51b-e8bf5a88521c",
+            "title": "New House",
+            "text": "My family was house hunting for a new place to live. I didn't want to move to a new house. I would have to leave behind my best friends. My father explained I would make new friends. My father was right in time I made new friends."
+        },
+        {
+            "id": "9ae4c35c-2f34-417d-a6e7-9c129a4c7fbb",
+            "title": "Corporation",
+            "text": "I was a member of a large corporation. One day, I decided to quit my job. Instead, I would pursue a career as a freelancer. At first, my family was confused by my decision. Eventually, they realized that freedom was more important than money."
+        },
+        {
+            "id": "6b63d068-8f6f-4204-81c6-ec6df26e9394",
+            "title": "Tune Up",
+            "text": "I and Liz were going to drive my car to Las Vegas. But I wanted to make sure the car would make it. My brother thought I should get a tune up. I took it to the local car place to have it done. I was very happy my brother had made the suggestion."
+        },
+        {
+            "id": "21f57730-8b77-461b-a1cc-d8c6d3177fba",
+            "title": "New puppy",
+            "text": "I really wanted a puppy. I had never had a pet before. I begged my parents to get my one. My parents refused. Finally my parents agreed to buy my one."
+        },
+        {
+            "id": "0871aa06-c950-44a7-ad58-173a1d6f6e5f",
+            "title": "Get A Life",
+            "text": "I loved my mother. But one evening I broke my mother's heart. My mother called out for me like I always did. But I was in a bad mood and snapped at my mother. I broke my mother's heart when I told her to get a life."
+        }
+    ],
+    "metadata": {}
+}

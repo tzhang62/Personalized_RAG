@@ -1,0 +1,40 @@
+{
+    "query": "dialog with R's persona: persona: i love to drink wine and dance in the moonlight. i'm 100 years old. i remember when nobody had a television. i am very strong for my age. context:  Q: hello , are you attending church in the morning ? R: if i lived close , i'd take you . i teach sunday school . Q: i do . i do not have any , my dogs are my children . R: <extra_id_0>",
+    "answers": [
+        "would you like to know the secret to living as long as i've ?"
+    ],
+    "generation": "i love dogs, i have one named fred.",
+    "passages": [
+        {
+            "id": "1c682811-0380-4016-aca1-91918e8100bd",
+            "title": "Tyler goes to war",
+            "text": "I am a young man. I want to serve my country. I joins the army. While in the army I go to war. I lose my life in a war."
+        },
+        {
+            "id": "3e53cf10-5e80-41d2-b7bb-fc910480a1be",
+            "title": "Broken ankle",
+            "text": "I was walking to school. Since I wasn't looking at my feet, I stepped on a rock. I landed on the ground in pain. Thankfully, a stranger rushed to pick me up. He took me to the hospital to seek treatment."
+        },
+        {
+            "id": "9a51198e-96f1-42c3-b09d-a3e1e067d803",
+            "title": "Overweight Kid",
+            "text": "My parents were overweight. I was overweight as well. The doctors told my parents it was unhealthy. My parents understood and decided to make a change. They got themselves and I on a diet."
+        },
+        {
+            "id": "5d5e7aeb-332f-4c8b-a3c3-44585501e493",
+            "title": "Foolish Frank",
+            "text": "I had been drinking beer. I got a call from my girlfriend, asking where I was. I suddenly realized I had a date that night. Since I was already a bit drunk, I could not drive. I spent the rest of the night drinking more beers."
+        },
+        {
+            "id": "a15c9a13-e251-4461-b74d-e6549c6633a7",
+            "title": "Chat",
+            "text": "It was the night after the first day of junior high. I and my friend Beth were on the phone. They had a lot to catch up on. I listened patiently as Beth told me about my day. She wanted to go 2 nd because she knew hers was the best day."
+        },
+        {
+            "id": "4d228490-2891-4bc5-a898-4db375b8d370",
+            "title": "True Confession",
+            "text": "I entered the confessional and kneeled. I thought I was confessing to the old parish priest. I confessed I had fantasized about the young visiting priest. I felt relief as I left the confessional. Then I saw the old parish priest pull up in my car."
+        }
+    ],
+    "metadata": {}
+}

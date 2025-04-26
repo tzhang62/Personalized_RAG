@@ -1,0 +1,40 @@
+{
+    "query": "dialog with R's persona: persona: hello i just moved here from germany. i love rollercoasters and sky diving. i do like watching cooking shows. i am a vegan and i love hummus. context:  Q: hello . i am watching tv snacking . how are you ? R: <extra_id_0>",
+    "answers": [
+        "i hope it is a healthy snack . i am doing well , just moved here ."
+    ],
+    "generation": "i am doing well, just watching cooking shows. i love them!",
+    "passages": [
+        {
+            "id": "fe173514-5598-4f9c-9f99-e54be9ba8f5b",
+            "title": "Samantha is Self-Sufficient",
+            "text": "My dad always taught me how to be self-sufficient. I even taught myself how to change a tyre on a car. One day my tyre blew while I was driving. I was able to properly change my tyre. I was very grateful to be able to get home safely."
+        },
+        {
+            "id": "be8c70f4-fdbf-43b8-870e-90f27a4cdc3c",
+            "title": "Bill Goes to Graduate School",
+            "text": "I decide that I want to pursue a master's degree after college. While my friends are all looking for jobs, I am applying for a school. At first I worried that I was making the wrong decision. However, when I get to graduate school, I feel great. I am proud that I will soon have a master's degree."
+        },
+        {
+            "id": "455727b8-d0ac-41ac-a537-2aa1e4fc54a2",
+            "title": "Change Clothes",
+            "text": "I was at my grandma's house. They had just gotten back from my grandpa's funeral. Everyone was anxious to change into comfortable clothes. I was the last one in the house. I had to wait for a room to open so I could change."
+        },
+        {
+            "id": "30bc87a6-d7fe-47dc-baf0-8a33e99b009e",
+            "title": "Going Home",
+            "text": "I am far from home. I miss my family. One day I realized I did not have to live far away. I moved home. My family was happy to have my back."
+        },
+        {
+            "id": "0e4110b1-fe10-4775-b3a5-fb280ef3707a",
+            "title": "Fireman",
+            "text": "I was turning 4 and told my mom my birthday wish. I wished to be a fireman for my birthday! My mom pondered this impossibility, then brightened. I set up a tour of the local fire station with its kind firemen. I got to be a foreman on my birthday after all!"
+        },
+        {
+            "id": "25bdb8f4-a588-4a12-bbe2-986c8ec7ea11",
+            "title": "Lorraine Makes her Bed",
+            "text": "I usually wake up and leave my bed unmade. However, I hate coming home to an unmade bed at night. One morning I take the time to make my bed before leaving home. When I got home that night I was happy to see my bed made up. I decide to make my bed every morning."
+        }
+    ],
+    "metadata": {}
+}

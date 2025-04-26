@@ -1,0 +1,40 @@
+{
+    "query": "dialog with R's persona: persona: my boyfriend and i are moving into an apartment together next week. my favorite colors are red and silver. i'm fluent in english spanish and french. i'm an elementary school teacher. context:  Q: hello how are you ? R: sounds like a good way to end the weekend . Q: i like green but red would be nice also . R: <extra_id_0>",
+    "answers": [
+        "green is okay . silver is my other favorite ."
+    ],
+    "generation": "i teach elementary school, i know all the trends",
+    "passages": [
+        {
+            "id": "6b63d068-8f6f-4204-81c6-ec6df26e9394",
+            "title": "Tune Up",
+            "text": "I and Liz were going to drive my car to Las Vegas. But I wanted to make sure the car would make it. My brother thought I should get a tune up. I took it to the local car place to have it done. I was very happy my brother had made the suggestion."
+        },
+        {
+            "id": "c228ea78-8431-46d3-862a-2f950f4a6df7",
+            "title": "New Paint",
+            "text": "Today I decided to paint my laundry room. It was very hard to move both appliances. I had to call my friend to help me move the washer. He helped me clear the room and helped me paint. I was glad I called my friend for help."
+        },
+        {
+            "id": "1c682811-0380-4016-aca1-91918e8100bd",
+            "title": "Tyler goes to war",
+            "text": "I am a young man. I want to serve my country. I joins the army. While in the army I go to war. I lose my life in a war."
+        },
+        {
+            "id": "b45d3667-2b46-43f6-a957-82778925308e",
+            "title": "War",
+            "text": "I joined the Army. After training, I went overseas. I was not prepared to fight a war. I finally got to go home. I decided not to reenlist."
+        },
+        {
+            "id": "21f57730-8b77-461b-a1cc-d8c6d3177fba",
+            "title": "New puppy",
+            "text": "I really wanted a puppy. I had never had a pet before. I begged my parents to get my one. My parents refused. Finally my parents agreed to buy my one."
+        },
+        {
+            "id": "0871aa06-c950-44a7-ad58-173a1d6f6e5f",
+            "title": "Get A Life",
+            "text": "I loved my mother. But one evening I broke my mother's heart. My mother called out for me like I always did. But I was in a bad mood and snapped at my mother. I broke my mother's heart when I told her to get a life."
+        }
+    ],
+    "metadata": {}
+}
