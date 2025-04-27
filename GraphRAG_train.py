@@ -307,7 +307,7 @@ class JointlyTrainedRAG(nn.Module):
         self.retriever = DualGraphEncoder(in_dim=384, hid_dim=hidden_dim, out_dim=out_dim)
         
         # Generator component
-        self.generator = T5ForConditionalGeneration.from_pretrained("t5-base")
+        self.generator = T5ForConditionalGeneration.from_pretrained("t5-small")
         
         # Connection layer from graph to text model
         self.graph_to_text = nn.Linear(out_dim, self.generator.config.d_model)
