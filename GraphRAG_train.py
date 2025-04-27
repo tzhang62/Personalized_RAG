@@ -8,7 +8,7 @@ from torch_geometric.data import Data
 from torch_geometric.nn import GATConv
 from sklearn.metrics.pairwise import cosine_similarity
 import torch.nn as nn
-from transformers import GPT2LMHeadModel, T5ForConditionalGeneration
+from transformers import GPT2LMHeadModel, T5ForConditionalGeneration, AutoModel, AutoTokenizer
 
 device = torch.device('mps' if torch.backends.mps.is_available() else 'cpu')
 
@@ -300,31 +300,39 @@ class GraphToTextGenerator(nn.Module):
                 
         return curr_ids
 
-class JointlyTrainedRAG(nn.Module):
+class BERTScoreFeedbackRAG(nn.Module):
     def __init__(self, hidden_dim=128, out_dim=64):
         super().__init__()
         # Retriever component
         self.retriever = DualGraphEncoder(in_dim=384, hid_dim=hidden_dim, out_dim=out_dim)
         
         # Generator component
-        self.generator = T5ForConditionalGeneration.from_pretrained("t5-small")
+        self.generator = T5ForConditionalGeneration.from_pretrained("t5-base")
         
         # Connection layer from graph to text model
         self.graph_to_text = nn.Linear(out_dim, self.generator.config.d_model)
         
-        # Hyperparameter to balance losses
-        self.lambda_coef = 0.5
+        # BERTScore model for feedback
+        # We'll use bert-base-uncased for efficiency, but you can use larger models too
+        self.bert_model = AutoModel.from_pretrained("bert-base-uncased")
+        self.tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
+        
+        # Hyperparameters
+        self.lambda_retrieval = 0.3  # Weight for retrieval loss
+        self.lambda_bertscore = 0.2  # Weight for BERTScore feedback
         
     def forward(self, persona_graph, story_graphs, positive_idx=None, 
-                input_ids=None, attention_mask=None, labels=None):
+                input_ids=None, attention_mask=None, labels=None,
+                references=None):
         """
-        Joint forward pass for both retriever and generator
+        Joint forward pass with BERTScore feedback
         
         Args:
             persona_graph: The persona graph
             story_graphs: List of candidate story graphs
             positive_idx: Index of the positive story (for training)
             input_ids, attention_mask, labels: Inputs for text generation
+            references: Reference responses for BERTScore computation
             
         Returns:
             Dictionary with combined loss and generation outputs
@@ -332,66 +340,181 @@ class JointlyTrainedRAG(nn.Module):
         # 1. Retrieval step
         similarity_scores = self.retriever(persona_graph, story_graphs)
         
-        # 2. Get top story based on similarity
-        if self.training and positive_idx is not None:
-            # During training, use the positive example
-            selected_idx = positive_idx
+        # Get probabilities over stories
+        story_probs = F.softmax(similarity_scores, dim=0)
+        
+        # During training, sample stories based on similarity scores
+        if self.training:
+            # Use Gumbel-softmax for differentiable sampling
+            story_sample = F.gumbel_softmax(similarity_scores, tau=1.0, hard=True)
+            selected_idx = torch.argmax(story_sample).item()
         else:
             # During inference, use the highest scoring story
             selected_idx = torch.argmax(similarity_scores).item()
             
         selected_story = story_graphs[selected_idx]
         
-        # 3. Encode selected story graph for the generator
+        # 2. Encode selected story graph for the generator
         story_embedding = self.retriever.encode_story(selected_story)
-        
-        # 4. Convert graph embedding to a format usable by the text generator
-        # Project to generator's embedding dimension
         text_embedding = self.graph_to_text(story_embedding)
         
-        # 5. Prepare prefix embeddings for T5
-        # This embeds the graph information into the generator
+        # 3. Generate with the graph-enhanced input
         encoder_outputs = self.prepare_encoder_with_graph(input_ids, text_embedding)
         
-        # 6. Generate with the graph-enhanced input
         outputs = self.generator(
             input_ids=input_ids,
             attention_mask=attention_mask,
             labels=labels,
-            encoder_outputs=encoder_outputs
+            encoder_outputs=encoder_outputs,
+            output_hidden_states=True
         )
         
-        # 7. Compute the combined loss for joint training
+        # 4. Compute standard generation loss
         generation_loss = outputs.loss
         
+        # Combined loss starts with generation loss
+        total_loss = generation_loss
+        
+        # 5. Add retrieval loss if in training
         if self.training and positive_idx is not None:
-            # Retrieval loss (contrastive loss)
             retrieval_loss = self.retriever.compute_contrastive_loss(
                 similarity_scores, positive_idx)
+            total_loss += self.lambda_retrieval * retrieval_loss
+        
+        # 6. Add BERTScore feedback if references provided
+        if self.training and references is not None:
+            # Generate text (without teacher forcing)
+            with torch.no_grad():
+                generated_ids = self.generator.generate(
+                    input_ids=input_ids,
+                    attention_mask=attention_mask,
+                    encoder_outputs=encoder_outputs,
+                    max_length=100
+                )
+                
+                # Decode generated texts
+                generated_texts = self.tokenizer.batch_decode(
+                    generated_ids, skip_special_tokens=True)
+                
+            # Calculate BERTScore
+            bertscore_loss = self.compute_bertscore_loss(generated_texts, references)
             
-            # Combined loss for joint optimization
-            total_loss = generation_loss + self.lambda_coef * retrieval_loss
-            outputs.loss = total_loss
+            # Add to total loss
+            total_loss += self.lambda_bertscore * bertscore_loss
+                
+        # Update the output loss
+        outputs.loss = total_loss
         
         return outputs
-        
+    
     def prepare_encoder_with_graph(self, input_ids, graph_embedding):
         """Prepare T5 encoder outputs enhanced with graph embedding"""
-        # Get regular encoder outputs 
+        # Similar to the previous implementation
         encoder_outputs = self.generator.encoder(input_ids)
         
-        # Add graph information to encoder outputs
-        # This is a simplified approach - you might want to use 
-        # cross-attention or other methods to integrate graph info
         batch_size = input_ids.shape[0]
         graph_emb_expanded = graph_embedding.unsqueeze(0).expand(batch_size, 1, -1)
         
-        # Concatenate graph embedding to sequence or add as a prefix
         enhanced_hidden_states = torch.cat([
             graph_emb_expanded, 
             encoder_outputs.last_hidden_state
         ], dim=1)
         
-        # Return modified encoder outputs
         encoder_outputs.last_hidden_state = enhanced_hidden_states
         return encoder_outputs
+    
+    def compute_bertscore_loss(self, candidates, references):
+        """
+        Compute BERTScore-based loss to encourage coherence
+        
+        Args:
+            candidates: List of generated texts
+            references: List of reference texts
+            
+        Returns:
+            bertscore_loss: Loss based on BERTScore (1 - F1 score)
+        """
+        # Tokenize candidates and references
+        candidate_encodings = self.tokenizer(candidates, return_tensors="pt", 
+                                           padding=True, truncation=True).to(self.bert_model.device)
+        reference_encodings = self.tokenizer(references, return_tensors="pt", 
+                                           padding=True, truncation=True).to(self.bert_model.device)
+        
+        # Get BERT embeddings
+        with torch.no_grad():
+            candidate_outputs = self.bert_model(**candidate_encodings)
+            reference_outputs = self.bert_model(**reference_encodings)
+            
+            # Get token embeddings from last hidden state
+            candidate_embeds = candidate_outputs.last_hidden_state
+            reference_embeds = reference_outputs.last_hidden_state
+            
+            # Normalize embeddings
+            candidate_embeds = F.normalize(candidate_embeds, p=2, dim=2)
+            reference_embeds = F.normalize(reference_embeds, p=2, dim=2)
+        
+        # Compute cosine similarity matrix for each pair
+        batch_scores = []
+        for i in range(len(candidates)):
+            # Get valid token embeddings (exclude padding)
+            cand_mask = candidate_encodings.attention_mask[i].bool()
+            ref_mask = reference_encodings.attention_mask[i].bool()
+            
+            c_embed = candidate_embeds[i, cand_mask]
+            r_embed = reference_embeds[i, ref_mask]
+            
+            # Compute similarity matrix
+            sim_matrix = torch.matmul(c_embed, r_embed.transpose(0, 1))
+            
+            # Compute precision, recall and F1
+            precision = sim_matrix.max(dim=1)[0].mean()
+            recall = sim_matrix.max(dim=0)[0].mean()
+            f1 = 2 * precision * recall / (precision + recall + 1e-8)
+            
+            batch_scores.append(f1)
+        
+        # Average BERTScore F1 across batch
+        avg_bertscore_f1 = torch.stack(batch_scores).mean()
+        
+        # Loss is 1 - F1 score (so higher F1 means lower loss)
+        bertscore_loss = 1 - avg_bertscore_f1
+        
+        return bertscore_loss
+
+def train_feedback_model(model, train_dataloader, optimizer, num_epochs):
+    model.train()
+    
+    for epoch in range(num_epochs):
+        total_loss = 0
+        
+        for batch in train_dataloader:
+            # Unpack batch
+            persona_graphs = batch['persona_graphs']
+            story_graphs = batch['story_graphs']
+            positive_indices = batch['positive_indices']
+            input_ids = batch['input_ids']
+            attention_mask = batch['attention_mask']
+            labels = batch['labels']
+            references = batch['references']  # Reference responses
+            
+            # Forward pass with all components
+            outputs = model(
+                persona_graph=persona_graphs,
+                story_graphs=story_graphs,
+                positive_idx=positive_indices,
+                input_ids=input_ids,
+                attention_mask=attention_mask,
+                labels=labels,
+                references=references
+            )
+            
+            loss = outputs.loss
+            
+            # Backward pass
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+            
+            total_loss += loss.item()
+        
+        print(f"Epoch {epoch+1}, Average loss: {total_loss/len(train_dataloader)}")
