@@ -8,6 +8,7 @@ from torch_geometric.data import Data
 from torch_geometric.nn import GATConv
 from sklearn.metrics.pairwise import cosine_similarity
 import torch.nn as nn
+from transformers import GPT2LMHeadModel, T5ForConditionalGeneration
 
 device = torch.device('mps' if torch.backends.mps.is_available() else 'cpu')
 
@@ -160,59 +161,237 @@ def retrieve_stories(retriever, persona_graph, story_graphs, top_k=3):
     return top_indices.cpu().numpy(), top_scores.cpu().numpy()
 
 
-class RetrievalAugmentedGenerator(torch.nn.Module):
-    def __init__(self, retriever, generator, lambda_coef=0.5):
+class GraphToTextGenerator(nn.Module):
+    def __init__(self):
         super().__init__()
-        self.retriever = retriever
-        self.generator = generator  # Your T5 or other generator model
-        self.lambda_coef = lambda_coef
+        # Graph encoder
+        self.graph_encoder = nn.ModuleList([
+            GATConv(384, 256),
+            GATConv(256, 768)
+        ])
+        # Text decoder (e.g., GPT-2)
+        self.text_decoder = GPT2LMHeadModel.from_pretrained("gpt2")
+        # Cross-attention to connect graph encodings to text decoder
+        self.cross_attention = nn.MultiheadAttention(768, 8)
+        # Projection layer to map cross-attended representations back to model dimension
+        self.projection = nn.Linear(768, 768)
         
-    def forward(self, persona_graph, story_graphs, input_ids, 
-                attention_mask, labels=None, positive_story_idx=None):
+    def forward(self, graph, decoder_input_ids, labels=None, generate=False, max_length=100):
         """
-        Forward pass with joint retrieval and generation
+        Forward pass for graph-to-text generation
         
         Args:
-            persona_graph: Persona graph
-            story_graphs: List of story graphs
-            input_ids, attention_mask: Inputs for the generator
-            labels: Target outputs for the generator (optional)
-            positive_story_idx: Index of the positive story (for training)
+            graph: PyG Data object containing the graph
+            decoder_input_ids: Input token IDs for the text decoder
+            labels: Optional target labels for training
+            generate: Whether to run generation (inference) or training
+            max_length: Maximum generation length for inference
             
         Returns:
-            Dictionary with loss and logits
+            During training: loss, logits
+            During inference: generated text IDs
         """
-        # Get similarity scores from retriever
+        # Process graph with GAT layers
+        x, edge_index = graph.x, graph.edge_index
+        for i, gat in enumerate(self.graph_encoder):
+            x = gat(x, edge_index)
+            if i < len(self.graph_encoder) - 1:
+                x = F.relu(x)
+        
+        # Graph node representations after GAT processing
+        graph_node_embeddings = x  # Shape: [num_nodes, 768]
+        
+        if generate:
+            # For inference/generation mode
+            return self.generate_text(graph_node_embeddings, decoder_input_ids, max_length)
+        else:
+            # For training mode
+            # Get decoder outputs normally first
+            decoder_outputs = self.text_decoder(
+                input_ids=decoder_input_ids,
+                output_hidden_states=True,
+                return_dict=True
+            )
+            decoder_hidden_states = decoder_outputs.hidden_states[-1]  # [batch_size, seq_len, hidden_size]
+            
+            batch_size, seq_len, hidden_size = decoder_hidden_states.size()
+            
+            # Prepare graph embeddings for cross-attention (expand to match batch size)
+            # Assuming we process one graph per batch item
+            expanded_graph_embeddings = graph_node_embeddings.unsqueeze(0).expand(batch_size, -1, -1)
+            
+            # Apply cross-attention between decoder states and graph nodes
+            # Reshape for cross-attention: [seq_len, batch_size, hidden_size]
+            q = decoder_hidden_states.transpose(0, 1)
+            k = expanded_graph_embeddings.transpose(0, 1)
+            v = expanded_graph_embeddings.transpose(0, 1)
+            
+            enhanced_states, _ = self.cross_attention(q, k, v)
+            
+            # Reshape back: [batch_size, seq_len, hidden_size]
+            enhanced_states = enhanced_states.transpose(0, 1)
+            
+            # Project back to model dimension if needed
+            enhanced_states = self.projection(enhanced_states)
+            
+            # Add residual connection
+            enhanced_states = enhanced_states + decoder_hidden_states
+            
+            # Pass through the LM head to get logits
+            lm_head = self.text_decoder.get_output_embeddings()
+            logits = lm_head(enhanced_states)
+            
+            # Compute loss if labels are provided
+            loss = None
+            if labels is not None:
+                loss_fct = nn.CrossEntropyLoss()
+                # Reshape logits and labels for loss computation
+                shift_logits = logits[..., :-1, :].contiguous()
+                shift_labels = labels[..., 1:].contiguous()
+                loss = loss_fct(shift_logits.view(-1, shift_logits.size(-1)), shift_labels.view(-1))
+            
+            return {"loss": loss, "logits": logits}
+    
+    def generate_text(self, graph_node_embeddings, input_ids, max_length):
+        """
+        Autoregressive text generation using graph information
+        """
+        batch_size = input_ids.shape[0]
+        device = input_ids.device
+        
+        # Start with input_ids
+        curr_ids = input_ids
+        
+        for _ in range(max_length):
+            # Get model outputs
+            outputs = self.text_decoder(curr_ids, output_hidden_states=True, return_dict=True)
+            hidden_states = outputs.hidden_states[-1]  # [batch_size, seq_len, hidden_size]
+            
+            # Only need to enhance the last position for generation
+            last_hidden = hidden_states[:, -1:, :]
+            
+            # Expand graph node embeddings to batch size
+            expanded_graph_embeddings = graph_node_embeddings.unsqueeze(0).expand(batch_size, -1, -1)
+            
+            # Apply cross-attention for the last position
+            q = last_hidden.transpose(0, 1)  # [1, batch_size, hidden_size]
+            k = expanded_graph_embeddings.transpose(0, 1)  # [num_nodes, batch_size, hidden_size]
+            v = expanded_graph_embeddings.transpose(0, 1)
+            
+            enhanced_last_hidden, _ = self.cross_attention(q, k, v)
+            enhanced_last_hidden = enhanced_last_hidden.transpose(0, 1)  # [batch_size, 1, hidden_size]
+            
+            # Project and add residual
+            enhanced_last_hidden = self.projection(enhanced_last_hidden) + last_hidden
+            
+            # Get logits for next token prediction
+            lm_head = self.text_decoder.get_output_embeddings()
+            next_token_logits = lm_head(enhanced_last_hidden).squeeze(1)  # [batch_size, vocab_size]
+            
+            # Sample next token
+            next_tokens = torch.argmax(next_token_logits, dim=-1).unsqueeze(-1)  # [batch_size, 1]
+            
+            # Concatenate with previous tokens
+            curr_ids = torch.cat([curr_ids, next_tokens], dim=-1)
+            
+            # Check if we've generated EOS token
+            if (next_tokens == self.text_decoder.config.eos_token_id).all():
+                break
+                
+        return curr_ids
+
+class JointlyTrainedRAG(nn.Module):
+    def __init__(self, hidden_dim=128, out_dim=64):
+        super().__init__()
+        # Retriever component
+        self.retriever = DualGraphEncoder(in_dim=384, hid_dim=hidden_dim, out_dim=out_dim)
+        
+        # Generator component
+        self.generator = T5ForConditionalGeneration.from_pretrained("t5-base")
+        
+        # Connection layer from graph to text model
+        self.graph_to_text = nn.Linear(out_dim, self.generator.config.d_model)
+        
+        # Hyperparameter to balance losses
+        self.lambda_coef = 0.5
+        
+    def forward(self, persona_graph, story_graphs, positive_idx=None, 
+                input_ids=None, attention_mask=None, labels=None):
+        """
+        Joint forward pass for both retriever and generator
+        
+        Args:
+            persona_graph: The persona graph
+            story_graphs: List of candidate story graphs
+            positive_idx: Index of the positive story (for training)
+            input_ids, attention_mask, labels: Inputs for text generation
+            
+        Returns:
+            Dictionary with combined loss and generation outputs
+        """
+        # 1. Retrieval step
         similarity_scores = self.retriever(persona_graph, story_graphs)
         
-        # Get top story index
-        top_story_idx = torch.argmax(similarity_scores).item()
-        top_story = story_graphs[top_story_idx]
+        # 2. Get top story based on similarity
+        if self.training and positive_idx is not None:
+            # During training, use the positive example
+            selected_idx = positive_idx
+        else:
+            # During inference, use the highest scoring story
+            selected_idx = torch.argmax(similarity_scores).item()
+            
+        selected_story = story_graphs[selected_idx]
         
-        # Generate response
-        # Here you need to convert the story graph back to text or embeddings
-        # that your generator can use
-        story_content = convert_graph_to_text(top_story)  # Implement this function
+        # 3. Encode selected story graph for the generator
+        story_embedding = self.retriever.encode_story(selected_story)
         
-        # Append story content to input
-        augmented_input = augment_input_with_story(input_ids, story_content)  # Implement this
+        # 4. Convert graph embedding to a format usable by the text generator
+        # Project to generator's embedding dimension
+        text_embedding = self.graph_to_text(story_embedding)
         
-        # Generate response
+        # 5. Prepare prefix embeddings for T5
+        # This embeds the graph information into the generator
+        encoder_outputs = self.prepare_encoder_with_graph(input_ids, text_embedding)
+        
+        # 6. Generate with the graph-enhanced input
         outputs = self.generator(
-            input_ids=augmented_input,
+            input_ids=input_ids,
             attention_mask=attention_mask,
-            labels=labels
+            labels=labels,
+            encoder_outputs=encoder_outputs
         )
         
-        # If in training mode and we have a positive story
-        if self.training and positive_story_idx is not None:
-            # Compute retriever loss
+        # 7. Compute the combined loss for joint training
+        generation_loss = outputs.loss
+        
+        if self.training and positive_idx is not None:
+            # Retrieval loss (contrastive loss)
             retrieval_loss = self.retriever.compute_contrastive_loss(
-                similarity_scores, positive_story_idx)
+                similarity_scores, positive_idx)
             
-            # Combine losses
-            if labels is not None:
-                total_loss = outputs.loss + self.lambda_coef * retrieval_loss
-                outputs.loss = total_loss
+            # Combined loss for joint optimization
+            total_loss = generation_loss + self.lambda_coef * retrieval_loss
+            outputs.loss = total_loss
         
         return outputs
+        
+    def prepare_encoder_with_graph(self, input_ids, graph_embedding):
+        """Prepare T5 encoder outputs enhanced with graph embedding"""
+        # Get regular encoder outputs 
+        encoder_outputs = self.generator.encoder(input_ids)
+        
+        # Add graph information to encoder outputs
+        # This is a simplified approach - you might want to use 
+        # cross-attention or other methods to integrate graph info
+        batch_size = input_ids.shape[0]
+        graph_emb_expanded = graph_embedding.unsqueeze(0).expand(batch_size, 1, -1)
+        
+        # Concatenate graph embedding to sequence or add as a prefix
+        enhanced_hidden_states = torch.cat([
+            graph_emb_expanded, 
+            encoder_outputs.last_hidden_state
+        ], dim=1)
+        
+        # Return modified encoder outputs
+        encoder_outputs.last_hidden_state = enhanced_hidden_states
+        return encoder_outputs
