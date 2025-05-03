@@ -11,6 +11,37 @@ import torch.nn as nn
 from transformers import GPT2LMHeadModel, T5ForConditionalGeneration, AutoModel, AutoTokenizer
 
 device = torch.device('mps' if torch.backends.mps.is_available() else 'cpu')
+### graph construction
+
+persona = ["I like to remodel homes.", "I like to go hunting.", "I like to shoot a bow.", "my favorite holiday is Halloween."]
+
+model = SentenceTransformer('Lajavaness/bilingual-embedding-small', trust_remote_code=True)
+device = torch.device('mps' if torch.backends.mps.is_available() else 'cpu')
+
+persona_embeddings = model.encode(persona, convert_to_tensor=True)
+
+# Ensure your persona_embeddings tensor is already computed (assumed)
+persona_embeddings = persona_embeddings.to(device)
+
+# Compute similarity on CPU (required by sklearn), then move tensors back
+embeddings_cpu = persona_embeddings.cpu().numpy()
+similarity_matrix = cosine_similarity(embeddings_cpu)
+
+# Construct edges based on similarity threshold
+threshold = 0.7
+edge_index = [[], []]
+num_nodes = persona_embeddings.size(0)
+
+for i in range(num_nodes):
+    for j in range(i + 1, num_nodes):
+        if similarity_matrix[i][j] >= threshold:
+            edge_index[0].extend([i, j])
+            edge_index[1].extend([j, i])
+
+# Move edge_index to MPS device explicitly
+edge_index = torch.tensor(edge_index, dtype=torch.long, device=device)
+
+graph_data = Data(x=persona_embeddings, edge_index=edge_index).to(device)
 
 # Define the GNN model explicitly for MPS
 class PersonaGNN(torch.nn.Module):
@@ -307,7 +338,7 @@ class BERTScoreFeedbackRAG(nn.Module):
         self.retriever = DualGraphEncoder(in_dim=384, hid_dim=hidden_dim, out_dim=out_dim)
         
         # Generator component
-        self.generator = T5ForConditionalGeneration.from_pretrained("t5-base")
+        self.generator = T5ForConditionalGeneration.from_pretrained("t5-small")
         
         # Connection layer from graph to text model
         self.graph_to_text = nn.Linear(out_dim, self.generator.config.d_model)
@@ -376,12 +407,14 @@ class BERTScoreFeedbackRAG(nn.Module):
         total_loss = generation_loss
         
         # 5. Add retrieval loss if in training
+        retrieval_loss = None
         if self.training and positive_idx is not None:
             retrieval_loss = self.retriever.compute_contrastive_loss(
                 similarity_scores, positive_idx)
             total_loss += self.lambda_retrieval * retrieval_loss
         
         # 6. Add BERTScore feedback if references provided
+        bertscore_loss = None
         if self.training and references is not None:
             # Generate text (without teacher forcing)
             with torch.no_grad():
@@ -401,25 +434,31 @@ class BERTScoreFeedbackRAG(nn.Module):
             
             # Add to total loss
             total_loss += self.lambda_bertscore * bertscore_loss
-                
-        # Update the output loss
-        outputs.loss = total_loss
         
-        return outputs
+        # Return a dictionary with all components
+        return {
+            'loss': total_loss,
+            'generation_loss': generation_loss,
+            'retrieval_loss': retrieval_loss,
+            'bertscore_loss': bertscore_loss,
+            'logits': outputs.logits
+        }
     
     def prepare_encoder_with_graph(self, input_ids, graph_embedding):
         """Prepare T5 encoder outputs enhanced with graph embedding"""
-        # Similar to the previous implementation
+        # Get original encoder outputs
         encoder_outputs = self.generator.encoder(input_ids)
+        original_hidden_states = encoder_outputs.last_hidden_state
         
+        # Fuse graph embedding with all encoder tokens
         batch_size = input_ids.shape[0]
-        graph_emb_expanded = graph_embedding.unsqueeze(0).expand(batch_size, 1, -1)
+        graph_emb_expanded = graph_embedding.unsqueeze(0).unsqueeze(1).expand(batch_size, original_hidden_states.size(1), -1)
         
-        enhanced_hidden_states = torch.cat([
-            graph_emb_expanded, 
-            encoder_outputs.last_hidden_state
-        ], dim=1)
+        # Add graph information to original hidden states (weighted addition)
+        alpha = 0.3  # Weight for graph information
+        enhanced_hidden_states = (1-alpha) * original_hidden_states + alpha * graph_emb_expanded
         
+        # Update encoder outputs without changing sequence length
         encoder_outputs.last_hidden_state = enhanced_hidden_states
         return encoder_outputs
     
@@ -508,7 +547,7 @@ def train_feedback_model(model, train_dataloader, optimizer, num_epochs):
                 references=references
             )
             
-            loss = outputs.loss
+            loss = outputs['loss']
             
             # Backward pass
             optimizer.zero_grad()
