@@ -53,7 +53,7 @@ class PersonaGNN(torch.nn.Module):
     def forward(self, x, edge_index):
         x = torch.relu(self.gat1(x, edge_index))
         x = self.gat2(x, edge_index)
-        return x.mean(dim=0)
+        return x#.mean(dim=0)
 
 class DualGraphEncoder(torch.nn.Module):
     def __init__(self, in_dim=384, hid_dim=128, out_dim=64):
@@ -63,6 +63,9 @@ class DualGraphEncoder(torch.nn.Module):
         # Story encoder (identical architecture but separate weights)
         self.story_gnn = PersonaGNN(in_dim=in_dim, hid_dim=hid_dim, out_dim=out_dim) 
         # Temperature parameter (learnable)
+        
+        self.num_heads = 1
+        self.cross_attn = nn.MultiheadAttention(embed_dim=out_dim, num_heads=self.num_heads,  batch_first=True)
         self.temperature = torch.nn.Parameter(torch.ones([]) * 0.07)
         
     def encode_persona(self, persona_graph):
@@ -84,8 +87,29 @@ class DualGraphEncoder(torch.nn.Module):
         Returns:
             similarity_scores: Tensor of similarity scores
         """
-        # Encode persona (already outputs a mean-pooled graph representation)
-        persona_emb = self.encode_persona(persona_graph)
+        persona_nodes = self.encode_persona(persona_graph)  # [Np, D]
+        sims = []
+
+        for sg in story_graphs:
+            story_nodes = self.encode_story(sg)  # [Ns, D]
+
+            # MultiheadAttention ждёт input (B, L, E), поэтому batch_first=True
+            # у нас batch=1, поэтому unsqueeze(0)
+            #breakpoint()
+            #print(f"persona_nodes.shape: {persona_nodes.shape}")
+            #print(f"story_nodes.shape: {story_nodes.shape}")
+            attn_out, attn_w = self.cross_attn(
+                query=persona_nodes.unsqueeze(0),  # [1, Np, D]
+                key=story_nodes.unsqueeze(0),      # [1, Ns, D]
+                value=story_nodes.unsqueeze(0)     # [1, Ns, D]
+            )
+            # attn_w.shape == (B, Np, Ns) == (1, Np, Ns)
+            score = attn_w.mean()  # скалярное среднее по batch, Q и K
+            sims.append(score)
+
+        sims = torch.stack(sims) / self.temperature  # [num_stories]
+        #breakpoint()
+        return sims.squeeze()
         
         # Encode all stories
         story_embs = []
@@ -386,10 +410,11 @@ class BERTScoreFeedbackRAG(nn.Module):
         selected_story = story_graphs[selected_idx]
         
         # 2. Encode selected story graph for the generator
-        story_embedding = self.retriever.encode_story(selected_story)
+        story_embedding = self.retriever.encode_story(selected_story).mean(dim=0)
         text_embedding = self.graph_to_text(story_embedding)
         
         # 3. Generate with the graph-enhanced input
+        #breakpoint()
         encoder_outputs = self.prepare_encoder_with_graph(input_ids, text_embedding)
         
         outputs = self.generator(
@@ -522,7 +547,9 @@ class BERTScoreFeedbackRAG(nn.Module):
 
 def train_feedback_model(model, train_dataloader, optimizer, num_epochs):
     model.train()
-    
+    model = model.to(device)
+    optimizer = optimizer.to(device)
+
     for epoch in range(num_epochs):
         total_loss = 0
         
@@ -535,6 +562,13 @@ def train_feedback_model(model, train_dataloader, optimizer, num_epochs):
             attention_mask = batch['attention_mask']
             labels = batch['labels']
             references = batch['references']  # Reference responses
+            
+            persona_graphs, story_graphs, positive_indices, \
+                 input_ids, attention_mask, labels, references = \
+                    persona_graphs.to(device), story_graphs.to(device), \
+                    positive_indices.to(device), input_ids.to(device), \
+                    attention_mask.to(device), labels.to(device), \
+                    references.to(device)
             
             # Forward pass with all components
             outputs = model(

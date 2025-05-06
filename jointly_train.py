@@ -17,8 +17,8 @@ device = torch.device('cuda' if torch.cuda.is_available() else
 print(f"Using device: {device}")
 
 # Data paths
-train_data_path = "/Users/tzhang/projects/Personalized_RAG/data/LAPDOG_new_dataset/train_data_10000.jsonl"
-story_data_path = "/Users/tzhang/projects/Personalized_RAG/data/story.jsonl"
+train_data_path = "data/LAPDOG_new_dataset/train_data_10000.jsonl"   #"/Users/tzhang/projects/Personalized_RAG/data/LAPDOG_new_dataset/train_data_10000.jsonl"
+story_data_path = "data/story.jsonl"   #"/Users/tzhang/projects/Personalized_RAG/data/story.jsonl"
 
 # Load data
 def load_jsonl(file_path):
@@ -278,6 +278,7 @@ for epoch in range(num_epochs):
         batch_gen_loss = 0
         batch_retrieval_loss = 0
         batch_bertscore_loss = 0
+        #breakpoint()
         
         for item in batch:
             # Move tensors to device
@@ -314,10 +315,17 @@ for epoch in range(num_epochs):
             )
             
             # Get loss components directly
-            total_loss = outputs['loss']
+            total_loss =      outputs['loss']
             generation_loss = outputs['generation_loss']
-            retrieval_loss = outputs['retrieval_loss']
-            bertscore_loss = outputs['bertscore_loss']
+            retrieval_loss =  outputs['retrieval_loss']
+            bertscore_loss =  outputs['bertscore_loss']
+            (outputs['loss'] + outputs['generation_loss'] + outputs['retrieval_loss'] + outputs['bertscore_loss']).backward()
+
+            #outputs['generation_loss'].backward()
+            #outputs['retrieval_loss'].backward()
+            #outputs['bertscore_loss'].backward()
+            optimizer.step() 
+            optimizer.zero_grad()
             
         
         # Accumulate losses for tracking
