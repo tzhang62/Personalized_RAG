@@ -9,11 +9,12 @@ from torch_geometric.data import Data
 from tqdm import tqdm
 import numpy as np
 from transformers import AutoTokenizer
-from GraphRAG_train import BERTScoreFeedbackRAG
+from GraphRAG_train import BERTScoreFeedbackRAG, EnhancedBERTScoreFeedbackRAG
+
 
 # Set device
 device = torch.device('cuda' if torch.cuda.is_available() else 
-                   ('mps' if torch.backends.mps.is_available() else 'cpu'))
+                   'cpu')
 print(f"Using device: {device}")
 
 # Data paths
@@ -28,7 +29,7 @@ def load_jsonl(file_path):
         for line in f:
             data.append(json.loads(line))
             i += 1
-            if i > 1000:
+            if i > 100:
                 break
     return data
 
@@ -151,18 +152,25 @@ def extract_context(text):
 
 
 # Custom Dataset
-class PersonaDialogueDataset(Dataset):
-    def __init__(self, data, story_graphs, tokenizer, max_length=512):
+class PersonaDialogueStoryDataset(Dataset):
+    def __init__(self, data, story_data, story_graphs, tokenizer, max_length=512):
         self.data = data
+        self.story_data = story_data  # Add the original story data
         self.story_graphs = story_graphs
         self.tokenizer = tokenizer
         self.max_length = max_length
+        
+        # Store story sentences for quick access
+        self.story_sentences = []
+        for story in story_data:
+            sentences = story['text'].split('. ')
+            sentences = [s.strip() + '.' for s in sentences if s.strip()]
+            self.story_sentences.append(sentences)
         
         # Pre-compute persona graphs
         print("Processing personas into graphs...")
         self.persona_graphs = []
         for item in tqdm(data):
-            #import pdb; pdb.set_trace()
             question = item['question']
             persona = extract_persona(question)
             if len(persona) > 1:  # Ensure at least 2 nodes
@@ -181,10 +189,11 @@ class PersonaDialogueDataset(Dataset):
         item = self.data[idx]
         persona_graph = self.persona_graphs[idx]
         
-        # For positive story index, use similarity-based selection initially
-        # This will be refined during training
+        # Extract persona information
         question = item['question']
         persona = extract_persona(question)
+        
+        # For positive story index, use similarity-based selection initially
         positive_idx = self.get_initial_positive_story(persona)
         
         # Prepare input text (dialogue context)
@@ -195,7 +204,6 @@ class PersonaDialogueDataset(Dataset):
         input_encoding = self.tokenizer(input_text, padding='max_length', 
                                        truncation=True, max_length=self.max_length, 
                                        return_tensors='pt')
-     
         
         target_text = item['answers'][0]
         target_encoding = self.tokenizer(target_text, padding='max_length', 
@@ -208,7 +216,9 @@ class PersonaDialogueDataset(Dataset):
             'input_ids': input_encoding.input_ids.squeeze(),
             'attention_mask': input_encoding.attention_mask.squeeze(),
             'labels': target_encoding.input_ids.squeeze(),
-            'reference': target_text
+            'reference': target_text,
+            'persona_sentences': persona,
+            'dialogue_context': history,
         }
     
     def get_initial_positive_story(self, persona):
@@ -248,11 +258,15 @@ class PersonaDialogueDataset(Dataset):
         return best_idx
 
 # Create dataset and dataloader
-dataset = PersonaDialogueDataset(train_data, story_graphs, tokenizer)
+dataset = PersonaDialogueStoryDataset(train_data, story_data, story_graphs, tokenizer)
 dataloader = DataLoader(dataset, batch_size=4, shuffle=True, collate_fn=lambda x: x)
 
 # Initialize the model
-model = BERTScoreFeedbackRAG(hidden_dim=128, out_dim=64).to(device)
+model = EnhancedBERTScoreFeedbackRAG(
+    hidden_dim=128, 
+    out_dim=64,
+    classifier_path="/Users/tzhang/projects/Personalized_RAG/model/classifer/consistency_classifier_fold5.pt"
+).to(device)
 
 # Initialize optimizer
 optimizer = optim.AdamW(model.parameters(), lr=5e-5)
@@ -292,6 +306,7 @@ for epoch in range(num_epochs):
             sample_size = min(50, len(story_graphs))
             sample_indices = np.random.choice(len(story_graphs), sample_size, replace=False)
             
+            
             # Ensure positive story is included
             if positive_idx not in sample_indices:
                 sample_indices[0] = positive_idx
@@ -302,6 +317,9 @@ for epoch in range(num_epochs):
             # Get sampled story graphs
             sampled_story_graphs = [story_graphs[i].to(device) for i in sample_indices]
             
+            # Get the corresponding story sentences from the dataset
+            sampled_story_sentences = [dataset.story_sentences[i] for i in sample_indices]
+            
             # Forward pass
             outputs = model(
                 persona_graph=persona_graph,
@@ -310,8 +328,18 @@ for epoch in range(num_epochs):
                 input_ids=input_ids,
                 attention_mask=attention_mask,
                 labels=labels,
-                references=reference
+                references=reference,
+                persona_sentences=item['persona_sentences'],
+                story_sentences_list=sampled_story_sentences
             )
+            
+            # Get loss
+            loss = outputs['loss']
+            
+            # ADD THESE LINES FOR BACKPROPAGATION
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
             
             # Get loss components directly
             total_loss = outputs['loss']

@@ -3,6 +3,7 @@ import pandas as pd
 import random
 
 index_number_20 = list(range(20))
+import pdb; pdb.set_trace()
 
 lapdog = '/Users/tzhang/projects/LAPDOG/results/valid_data_500-step_lapdog-12000.jsonl'
 baseline = '/Users/tzhang/projects/LAPDOG/results/valid_data_500_baseline-step-12000.jsonl'

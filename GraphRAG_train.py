@@ -9,6 +9,7 @@ from torch_geometric.nn import GATConv
 from sklearn.metrics.pairwise import cosine_similarity
 import torch.nn as nn
 from transformers import GPT2LMHeadModel, T5ForConditionalGeneration, AutoModel, AutoTokenizer
+from Classifier_Retriever import ConsistencyClassifier, PersonaStoryGraphDataset
 
 device = torch.device('mps' if torch.backends.mps.is_available() else 'cpu')
 ### graph construction
@@ -16,7 +17,7 @@ device = torch.device('mps' if torch.backends.mps.is_available() else 'cpu')
 persona = ["I like to remodel homes.", "I like to go hunting.", "I like to shoot a bow.", "my favorite holiday is Halloween."]
 
 model = SentenceTransformer('Lajavaness/bilingual-embedding-small', trust_remote_code=True)
-device = torch.device('mps' if torch.backends.mps.is_available() else 'cpu')
+
 
 persona_embeddings = model.encode(persona, convert_to_tensor=True)
 
@@ -520,6 +521,276 @@ class BERTScoreFeedbackRAG(nn.Module):
         
         return bertscore_loss
 
+class EnhancedBERTScoreFeedbackRAG(nn.Module):
+    def __init__(self, hidden_dim=128, out_dim=64, classifier_path=None):
+        super().__init__()
+        # Standard components on primary device (MPS/GPU)
+        self.retriever = DualGraphEncoder(in_dim=384, hid_dim=hidden_dim, out_dim=out_dim)
+        self.generator = T5ForConditionalGeneration.from_pretrained("t5-small")
+        self.graph_to_text = nn.Linear(out_dim, self.generator.config.d_model)
+        self.bert_model = AutoModel.from_pretrained("bert-base-uncased")
+        self.tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
+        
+        # Force CPU for consistency classifier
+        self.consistency_classifier = ConsistencyClassifier().to('cpu')
+        if classifier_path:
+            # Load classifier to CPU explicitly
+            self.consistency_classifier.load_state_dict(
+                torch.load(classifier_path, map_location='cpu')
+            )
+            print(f"Loaded consistency classifier from {classifier_path}")
+        
+        # Freeze classifier by default
+        for param in self.consistency_classifier.parameters():
+            param.requires_grad = False
+        
+        # Initialize BERT for creating fully connected graphs - on CPU
+        self.bert_tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased')
+        self.bert_model_for_graphs = AutoModel.from_pretrained('bert-base-uncased').to('cpu')
+        
+        with torch.no_grad():
+            self.bert_project = nn.Linear(768, 128).to('cpu')
+            
+        # Story embedding expansion to fix dimension mismatch
+        self.story_expansion = nn.Linear(64, 128).to('cpu')
+            
+        # Hyperparameters
+        self.lambda_retrieval = 0.3
+        self.lambda_bertscore = 0.2
+        self.lambda_consistency = 0.2
+        self.consistency_threshold = 0.5
+    
+    def encode_sentences_for_graph(self, sentences):
+        """Encode sentences using BERT for consistency classifier - on CPU"""
+        with torch.no_grad():
+            inputs = self.bert_tokenizer(sentences, padding=True, truncation=True, return_tensors='pt').to('cpu')
+            outputs = self.bert_model_for_graphs(**inputs)
+            cls_embeddings = outputs.last_hidden_state[:,0,:]
+            cls_embeddings = self.bert_project(cls_embeddings)
+        return cls_embeddings
+        
+    def build_fully_connected_graph(self, sentences):
+        """Create a fully connected graph from sentences for consistency classifier - on CPU"""
+        # Encode sentences on CPU
+        x = self.encode_sentences_for_graph(sentences)
+        num_nodes = x.size(0)
+        
+        if num_nodes == 1:
+            # Single node case - no edges - on CPU
+            edge_index = torch.zeros((2, 0), dtype=torch.long, device='cpu')
+        else:
+            # Create fully connected graph - on CPU
+            node_indices = torch.arange(num_nodes, device='cpu')
+            edge_index = torch.combinations(node_indices, r=2).t()
+            edge_index = torch.cat([edge_index, edge_index.flip(0)], dim=1)
+        
+        return Data(x=x, edge_index=edge_index).to('cpu')
+        
+    def forward(self, persona_graph, story_graphs, positive_idx=None, 
+                input_ids=None, attention_mask=None, labels=None,
+                references=None, persona_sentences=None, story_sentences_list=None):
+        """
+        Joint forward pass with consistency classifier
+        """
+        # 1. Retrieval step - get similarity scores (on primary device)
+        similarity_scores = self.retriever(persona_graph, story_graphs)
+        
+        # 2. Apply consistency classifier if sentences are provided
+        consistency_scores = []
+        if persona_sentences is not None and story_sentences_list is not None:
+            try:
+                # Build fully connected persona graph for consistency classifier - on CPU
+                fc_persona_graph = self.build_fully_connected_graph(persona_sentences)
+                
+                # Apply classifier with all GNN operations on CPU
+                for i, story_sentences in enumerate(story_sentences_list):
+                    try:
+                        # Build fully connected story graph - on CPU
+                        fc_story_graph = self.build_fully_connected_graph(story_sentences)
+                        
+                        # Apply classifier with manual dimension handling - all on CPU
+                        with torch.no_grad():
+                            # Get persona embedding (64-dim)
+                            h_p = self.consistency_classifier.gnn_persona(fc_persona_graph)
+                            
+                            # Get story embedding (64-dim) and expand to 128-dim
+                            h_s_original = self.consistency_classifier.gnn_story(fc_story_graph)
+                            h_s = self.story_expansion(h_s_original)  # Expand to 128 dimensions
+                            
+                            # Concatenate to 192 dimensions (64+128)
+                            h_concat = torch.cat([h_p, h_s], dim=-1)
+                            
+                            # Pass directly to classifier layers
+                            logits = self.consistency_classifier.classifier(h_concat)
+                            score = torch.sigmoid(logits)
+                        
+                        consistency_scores.append(score.item())
+                    except Exception as e:
+                        print(f"Error processing story {i}: {e}")
+                        # Fallback to neutral score
+                        consistency_scores.append(0.5)
+                
+                # Move back to primary device
+                consistency_scores = torch.tensor(consistency_scores, device=similarity_scores.device)
+            except Exception as e:
+                print(f"Error in consistency classifier: {e}")
+                print("Falling back to similarity scores only")
+                consistency_scores = torch.ones_like(similarity_scores) * 0.5
+        else:
+            # If sentences not provided, use default scores
+            consistency_scores = torch.ones_like(similarity_scores) * 0.5
+        
+        # 3. Combine similarity and consistency scores
+        # Hard filtering approach
+        valid_stories = consistency_scores >= self.consistency_threshold
+        if valid_stories.any():
+            # Filter to only consider consistent stories
+            filtered_scores = similarity_scores.clone()
+            filtered_scores[~valid_stories] = -float('inf')
+            combined_scores = filtered_scores
+        else:
+            # If no stories meet threshold, fall back to similarity
+            combined_scores = similarity_scores
+        
+        # 4. Select story based on combined scores
+        if self.training:
+            story_sample = F.gumbel_softmax(combined_scores, tau=1.0, hard=True)
+            selected_idx = torch.argmax(story_sample).item()
+        else:
+            selected_idx = torch.argmax(combined_scores).item()
+            
+        selected_story = story_graphs[selected_idx]
+        
+        # 5. Encode selected story graph for the generator
+        story_embedding = self.retriever.encode_story(selected_story)
+        text_embedding = self.graph_to_text(story_embedding)
+        
+        # 6. Generate with the graph-enhanced input
+        encoder_outputs = self.prepare_encoder_with_graph(input_ids, text_embedding)
+        
+        outputs = self.generator(
+            input_ids=input_ids,
+            attention_mask=attention_mask,
+            labels=labels,
+            encoder_outputs=encoder_outputs,
+            output_hidden_states=True
+        )
+        
+        # 7. Compute standard generation loss
+        generation_loss = outputs.loss
+        
+        # Combined loss starts with generation loss
+        total_loss = generation_loss
+        
+        # 8. Add retrieval loss if in training
+        retrieval_loss = None
+        if self.training and positive_idx is not None:
+            retrieval_loss = self.retriever.compute_contrastive_loss(
+                similarity_scores, positive_idx)
+            total_loss += self.lambda_retrieval * retrieval_loss
+        
+        # 9. Add BERTScore feedback if references provided
+        bertscore_loss = None
+        if self.training and references is not None:
+            # Generate text (without teacher forcing)
+            with torch.no_grad():
+                generated_ids = self.generator.generate(
+                    input_ids=input_ids,
+                    attention_mask=attention_mask,
+                    encoder_outputs=encoder_outputs,
+                    max_length=100
+                )
+                
+                # Decode generated texts
+                generated_texts = self.tokenizer.batch_decode(
+                    generated_ids, skip_special_tokens=True)
+                
+            # Calculate BERTScore
+            bertscore_loss = self.compute_bertscore_loss(generated_texts, references)
+            
+            # Add to total loss
+            total_loss += self.lambda_bertscore * bertscore_loss
+                
+        # Update the output loss
+        outputs.loss = total_loss
+        
+        # Return a dictionary with all components
+        return {
+            'loss': total_loss,
+            'generation_loss': generation_loss,
+            'retrieval_loss': retrieval_loss,
+            'bertscore_loss': bertscore_loss,
+            'logits': outputs.logits
+        }
+    
+    def prepare_encoder_with_graph(self, input_ids, graph_embedding):
+        """Prepare T5 encoder outputs enhanced with graph embedding"""
+        # Get original encoder outputs
+        encoder_outputs = self.generator.encoder(input_ids)
+        original_hidden_states = encoder_outputs.last_hidden_state
+        
+        batch_size = input_ids.shape[0]
+        seq_len = original_hidden_states.size(1)
+        hidden_dim = original_hidden_states.size(2)
+        
+        # Replace the first token instead of adding a new one
+        graph_emb_expanded = graph_embedding.unsqueeze(0).expand(batch_size, 1, -1)
+        enhanced_hidden_states = original_hidden_states.clone()
+        enhanced_hidden_states[:, 0:1, :] = graph_emb_expanded
+        
+        # Update encoder outputs without changing sequence length
+        encoder_outputs.last_hidden_state = enhanced_hidden_states
+        return encoder_outputs
+    
+    def compute_bertscore_loss(self, candidates, references):
+        """Compute BERTScore-based loss to encourage coherence"""
+        # Tokenize candidates and references
+        candidate_encodings = self.tokenizer(candidates, return_tensors="pt", 
+                                           padding=True, truncation=True).to(self.bert_model.device)
+        reference_encodings = self.tokenizer(references, return_tensors="pt", 
+                                           padding=True, truncation=True).to(self.bert_model.device)
+        
+        # Get BERT embeddings
+        with torch.no_grad():
+            candidate_outputs = self.bert_model(**candidate_encodings)
+            reference_outputs = self.bert_model(**reference_encodings)
+            
+            # Get token embeddings from last hidden state
+            candidate_embeds = candidate_outputs.last_hidden_state
+            reference_embeds = reference_outputs.last_hidden_state
+            
+            # Normalize embeddings
+            candidate_embeds = F.normalize(candidate_embeds, p=2, dim=2)
+            reference_embeds = F.normalize(reference_embeds, p=2, dim=2)
+        
+        # Compute cosine similarity matrix for each pair
+        batch_scores = []
+        for i in range(len(candidates)):
+            # Get valid token embeddings (exclude padding)
+            cand_mask = candidate_encodings.attention_mask[i].bool()
+            ref_mask = reference_encodings.attention_mask[i].bool()
+            
+            c_embed = candidate_embeds[i, cand_mask]
+            r_embed = reference_embeds[i, ref_mask]
+            
+            # Compute similarity matrix
+            sim_matrix = torch.matmul(c_embed, r_embed.transpose(0, 1))
+            
+            # Compute precision, recall and F1
+            precision = sim_matrix.max(dim=1)[0].mean()
+            recall = sim_matrix.max(dim=0)[0].mean()
+            f1 = 2 * precision * recall / (precision + recall + 1e-8)
+            
+            batch_scores.append(f1)
+        
+        # Average BERTScore F1 across batch
+        avg_bertscore_f1 = torch.stack(batch_scores).mean()
+        
+        # Loss is 1 - F1 score (so higher F1 means lower loss)
+        bertscore_loss = 1 - avg_bertscore_f1
+        
+        return bertscore_loss
+
 def train_feedback_model(model, train_dataloader, optimizer, num_epochs):
     model.train()
     
@@ -557,3 +828,4 @@ def train_feedback_model(model, train_dataloader, optimizer, num_epochs):
             total_loss += loss.item()
         
         print(f"Epoch {epoch+1}, Average loss: {total_loss/len(train_dataloader)}")
+
