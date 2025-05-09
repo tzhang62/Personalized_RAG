@@ -11,7 +11,7 @@ import torch.nn as nn
 from transformers import GPT2LMHeadModel, T5ForConditionalGeneration, AutoModel, AutoTokenizer
 from Classifier_Retriever import ConsistencyClassifier, PersonaStoryGraphDataset
 
-device = torch.device('mps' if torch.backends.mps.is_available() else 'cpu')
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 ### graph construction
 
 persona = ["I like to remodel homes.", "I like to go hunting.", "I like to shoot a bow.", "my favorite holiday is Halloween."]
@@ -351,8 +351,8 @@ class BERTScoreFeedbackRAG(nn.Module):
         
         # Hyperparameters
         self.lambda_retrieval = 0.3  # Weight for retrieval loss
-        self.lambda_bertscore = 0.2  # Weight for BERTScore feedback
-        
+        # self.lambda_bertscore = 0.2  # Weight for BERTScore feedback
+        self.lambda_bertscore = 0.8
     def forward(self, persona_graph, story_graphs, positive_idx=None, 
                 input_ids=None, attention_mask=None, labels=None,
                 references=None):
@@ -409,14 +409,14 @@ class BERTScoreFeedbackRAG(nn.Module):
         
         # 5. Add retrieval loss if in training
         retrieval_loss = None
-        if self.training and positive_idx is not None:
+        if positive_idx is not None:
             retrieval_loss = self.retriever.compute_contrastive_loss(
                 similarity_scores, positive_idx)
             total_loss += self.lambda_retrieval * retrieval_loss
         
         # 6. Add BERTScore feedback if references provided
         bertscore_loss = None
-        if self.training and references is not None:
+        if references is not None:
             # Generate text (without teacher forcing)
             with torch.no_grad():
                 generated_ids = self.generator.generate(
@@ -532,11 +532,11 @@ class EnhancedBERTScoreFeedbackRAG(nn.Module):
         self.tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
         
         # Force CPU for consistency classifier
-        self.consistency_classifier = ConsistencyClassifier().to('cpu')
+        self.consistency_classifier = ConsistencyClassifier().to('cuda')
         if classifier_path:
             # Load classifier to CPU explicitly
             self.consistency_classifier.load_state_dict(
-                torch.load(classifier_path, map_location='cpu')
+                torch.load(classifier_path, map_location='cuda')
             )
             print(f"Loaded consistency classifier from {classifier_path}")
         
@@ -549,21 +549,22 @@ class EnhancedBERTScoreFeedbackRAG(nn.Module):
         self.bert_model_for_graphs = AutoModel.from_pretrained('bert-base-uncased').to('cpu')
         
         with torch.no_grad():
-            self.bert_project = nn.Linear(768, 128).to('cpu')
+            self.bert_project = nn.Linear(768, 128).to('cuda')
             
         # Story embedding expansion to fix dimension mismatch
-        self.story_expansion = nn.Linear(64, 128).to('cpu')
+        self.story_expansion = nn.Linear(64, 128).to('cuda')
             
         # Hyperparameters
         self.lambda_retrieval = 0.3
-        self.lambda_bertscore = 0.2
+        # self.lambda_bertscore = 0.2
+        self.lambda_bertscore = 0.7
         self.lambda_consistency = 0.2
         self.consistency_threshold = 0.5
     
     def encode_sentences_for_graph(self, sentences):
         """Encode sentences using BERT for consistency classifier - on CPU"""
         with torch.no_grad():
-            inputs = self.bert_tokenizer(sentences, padding=True, truncation=True, return_tensors='pt').to('cpu')
+            inputs = self.bert_tokenizer(sentences, padding=True, truncation=True, return_tensors='pt').to('cuda')
             outputs = self.bert_model_for_graphs(**inputs)
             cls_embeddings = outputs.last_hidden_state[:,0,:]
             cls_embeddings = self.bert_project(cls_embeddings)
@@ -577,14 +578,14 @@ class EnhancedBERTScoreFeedbackRAG(nn.Module):
         
         if num_nodes == 1:
             # Single node case - no edges - on CPU
-            edge_index = torch.zeros((2, 0), dtype=torch.long, device='cpu')
+            edge_index = torch.zeros((2, 0), dtype=torch.long, device='cuda')
         else:
             # Create fully connected graph - on CPU
-            node_indices = torch.arange(num_nodes, device='cpu')
+            node_indices = torch.arange(num_nodes, device='cuda')
             edge_index = torch.combinations(node_indices, r=2).t()
             edge_index = torch.cat([edge_index, edge_index.flip(0)], dim=1)
         
-        return Data(x=x, edge_index=edge_index).to('cpu')
+        return Data(x=x, edge_index=edge_index).to('cuda')
         
     def forward(self, persona_graph, story_graphs, positive_idx=None, 
                 input_ids=None, attention_mask=None, labels=None,
@@ -600,7 +601,7 @@ class EnhancedBERTScoreFeedbackRAG(nn.Module):
         if persona_sentences is not None and story_sentences_list is not None:
             try:
                 # Build fully connected persona graph for consistency classifier - on CPU
-                fc_persona_graph = self.build_fully_connected_graph(persona_sentences)
+                fc_persona_graph = self.build_fully_connected_graph(persona_sentences).to('cuda')
                 
                 # Apply classifier with all GNN operations on CPU
                 for i, story_sentences in enumerate(story_sentences_list):
@@ -680,18 +681,18 @@ class EnhancedBERTScoreFeedbackRAG(nn.Module):
         generation_loss = outputs.loss
         
         # Combined loss starts with generation loss
-        total_loss = generation_loss
+        
         
         # 8. Add retrieval loss if in training
         retrieval_loss = None
-        if self.training and positive_idx is not None:
+        if positive_idx is not None:
             retrieval_loss = self.retriever.compute_contrastive_loss(
                 similarity_scores, positive_idx)
-            total_loss += self.lambda_retrieval * retrieval_loss
+            
         
         # 9. Add BERTScore feedback if references provided
         bertscore_loss = None
-        if self.training and references is not None:
+        if references is not None:
             # Generate text (without teacher forcing)
             with torch.no_grad():
                 generated_ids = self.generator.generate(
@@ -709,8 +710,8 @@ class EnhancedBERTScoreFeedbackRAG(nn.Module):
             bertscore_loss = self.compute_bertscore_loss(generated_texts, references)
             
             # Add to total loss
-            total_loss += self.lambda_bertscore * bertscore_loss
-                
+            total_loss = generation_loss + self.lambda_retrieval * retrieval_loss + self.lambda_bertscore * bertscore_loss
+            #import pdb; pdb.set_trace()
         # Update the output loss
         outputs.loss = total_loss
         
@@ -720,7 +721,8 @@ class EnhancedBERTScoreFeedbackRAG(nn.Module):
             'generation_loss': generation_loss,
             'retrieval_loss': retrieval_loss,
             'bertscore_loss': bertscore_loss,
-            'logits': outputs.logits
+            'logits': outputs.logits,
+            'encoder_outputs': encoder_outputs
         }
     
     def prepare_encoder_with_graph(self, input_ids, graph_embedding):
@@ -790,6 +792,51 @@ class EnhancedBERTScoreFeedbackRAG(nn.Module):
         bertscore_loss = 1 - avg_bertscore_f1
         
         return bertscore_loss
+
+    # def compute_bertscore_loss(self, candidates, references):
+    #     cand_tok = self.tokenizer(candidates, padding=True, truncation=True,
+    #                             return_tensors="pt")
+    #     ref_tok  = self.tokenizer(references, padding=True, truncation=True,
+    #                             return_tensors="pt")
+
+    #     # Move to the BERT device
+    #     cand_tok = {k: v.to(self.bert_model.device) for k, v in cand_tok.items()}
+    #     ref_tok  = {k: v.to(self.bert_model.device) for k, v in ref_tok.items()}
+
+    #     cand_h = self.bert_model(**cand_tok).last_hidden_state      # (B, Tc, d)
+    #     ref_h  = self.bert_model(**ref_tok ).last_hidden_state      # (B, Tr, d)
+
+    #     cand_h = F.normalize(cand_h, p=2, dim=-1)
+    #     ref_h  = F.normalize(ref_h,  p=2, dim=-1)
+
+    #     specials = set(self.tokenizer.all_special_ids)              # <pad>, <eos>, etc.
+    #     batch_scores = []
+
+    #     for i in range(len(candidates)):
+    #         # valid tokens: mask==1 **and** not special
+    #         c_valid = (cand_tok["attention_mask"][i] == 1) & \
+    #                 (~torch.tensor([tid in specials for tid
+    #                                 in cand_tok["input_ids"][i]], device=cand_h.device))
+    #         r_valid = (ref_tok["attention_mask"][i] == 1) & \
+    #                 (~torch.tensor([tid in specials for tid
+    #                                 in ref_tok["input_ids"][i]], device=ref_h.device))
+
+    #         c_embed = cand_h[i, c_valid]           # may be empty
+    #         r_embed = ref_h[i, r_valid]
+
+    #         if c_embed.numel() == 0 or r_embed.numel() == 0:
+    #             batch_scores.append(torch.tensor(0.0, device=cand_h.device))
+    #             continue
+
+    #         sim = torch.matmul(c_embed, r_embed.T)
+    #         precision = sim.max(dim=1)[0].mean()
+    #         recall    = sim.max(dim=0)[0].mean()
+    #         f1 = 2 * precision * recall / (precision + recall + 1e-8)
+    #         batch_scores.append(f1)
+
+    #     avg_f1 = torch.stack(batch_scores).mean()
+    #     return 1 - avg_f1          # higher F1 → lower loss
+
 
 def train_feedback_model(model, train_dataloader, optimizer, num_epochs):
     model.train()
